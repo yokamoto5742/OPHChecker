@@ -97,8 +97,7 @@ def process_excel(input_file: str, output_file: str, sheet_name: str = '南館2'
 
 
 if __name__ == '__main__':
-    # raw文字列（r''）を使用してWindowsパスのエスケープシーケンスエラーを回避
-    input_path = r'C:\Shinseikai\OPHChecker\手術予定表.xls'
+    input_path = r'C:\Shinseikai\OPHChecker\input\手術予定表.xls'
     output_path = r'C:\Shinseikai\OPHChecker\processed_surgery_schedule.csv'
 
     process_excel(input_path, output_path)
