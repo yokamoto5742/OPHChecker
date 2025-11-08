@@ -1,3 +1,5 @@
+import unicodedata
+
 import pandas as pd
 
 
@@ -78,6 +80,11 @@ def process_eye_surgery_data(input_file_path: str, output_file_path: str) -> Non
     for column in columns_to_filter:
         for keyword in exclusion_keywords:
             df_processed = df_processed[~df_processed[column].str.contains(keyword, na=False)]
+
+    # 手術列の値を全角カナに変換
+    df_processed['手術'] = df_processed['手術'].apply(
+        lambda x: unicodedata.normalize('NFKC', x) if pd.notna(x) else x
+    )
 
     # CSVファイルに保存
     df_processed.to_csv(output_file_path, index=False, encoding='cp932')
