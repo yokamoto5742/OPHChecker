@@ -27,6 +27,19 @@ def process_surgery_schedule(input_path: str, output_path: str, sheet_name: str 
         lambda x: unicodedata.normalize('NFKC', str(x)) if pd.notna(x) else x
     )
 
+    # 術式列を ')' で分割して術眼列と手術列を作成
+    df_processed[['術眼', '手術']] = df_processed['術式'].str.split(')', n=1, expand=True)
+    df_processed['手術'] = df_processed['手術'].str.strip()  # 前後の空白を削除
+
+    # 術式列を削除
+    df_processed = df_processed.drop(columns=['術式'])
+
+    # 列名を変更
+    df_processed = df_processed.rename(columns={'日付': '手術日', 'ID': '患者ID'})
+
+    # 列の順番を調整
+    df_processed = df_processed[['手術日', '患者ID', '氏名', '入外', '術眼', '手術', '麻酔', '術者']]
+
     # CSVファイルとして保存
     df_processed.to_csv(output_path, index=False, encoding='cp932')
 
