@@ -51,6 +51,34 @@ def process_eye_surgery_data(input_file_path: str, output_file_path: str) -> Non
         lambda x: inpatient_mapping.get(x, x) if pd.notna(x) else x
     )
 
+    # 手術列から特定の文字列を削除
+    strings_to_remove = [
+        '(クラレオントーリック)',
+        '(クラレオンパンオプティクス)',
+        '(クラレオンパンオプティクストーリック)',
+        '(ビビティ)',
+        '(ビビティトーリック)',
+        '(アイハンストーリックⅡ)',
+        '(トーリック)',
+        '(inject)',
+    ]
+    for string in strings_to_remove:
+        df_processed['手術'] = df_processed['手術'].str.replace(string, '', regex=False)
+
+    # 氏名列または手術列で特定の文字列が含まれている行を削除
+    exclusion_keywords = [
+        '★',
+        '霰粒腫',
+        '術式未定',
+        '先天性鼻涙管閉塞開放術'
+    ]
+
+    columns_to_filter = ['氏名','手術']
+
+    for column in columns_to_filter:
+        for keyword in exclusion_keywords:
+            df_processed = df_processed[~df_processed[column].str.contains(keyword, na=False)]
+
     # CSVファイルに保存
     df_processed.to_csv(output_file_path, index=False, encoding='cp932')
 
