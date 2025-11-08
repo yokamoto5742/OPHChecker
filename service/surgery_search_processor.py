@@ -42,6 +42,17 @@ def process_eye_surgery_data(input_file_path: str, output_file_path: str) -> Non
         lambda x: anesthesia_mapping.get(x, x) if pd.notna(x) else x
     )
 
+    # 術者を名字に変換
+    surgeon_replacements = {
+        '橋本義弘': '橋本',
+        '植田芳樹': '植田',
+        '増子杏': '増子',
+        '田中伸弥': '田中',
+        '渡辺裕士': '渡辺',
+        '鈴木貴文': '鈴木'
+    }
+    df_processed['医師'] = df_processed['医師'].replace(surgeon_replacements)
+
     # 入外の値を変換
     inpatient_mapping = {
         'あやめ': '入院',
