@@ -1,3 +1,5 @@
+import unicodedata
+
 import pandas as pd
 
 
@@ -18,9 +20,14 @@ def process_surgery_schedule(input_path: str, output_path: str, sheet_name: str 
     df_processed = df[required_columns].copy()
 
     # 日付列を文字列形式に変換（YYYY/MM/DD形式）
-    df_processed['日付'] = pd.to_datetime(df_processed['日付']).dt.strftime('%Y/%m/%d')
+    df_processed.loc[:, '日付'] = pd.to_datetime(df_processed['日付']).dt.strftime('%Y/%m/%d')  # type: ignore
 
-    # CSVファイルとして出力
+    # 術式列の値を全角カナに変換
+    df_processed.loc[:, '術式'] = df_processed['術式'].apply(  # type: ignore
+        lambda x: unicodedata.normalize('NFKC', str(x)) if pd.notna(x) else x
+    )
+
+    # CSVファイルとして保存
     df_processed.to_csv(output_path, index=False, encoding='cp932')
 
     print(f"処理が完了しました。")
