@@ -20,13 +20,10 @@ def process_surgery_schedule(input_path: str, output_path: str, sheet_name: str 
     # 日付列を文字列形式に変換（YYYY/MM/DD形式）
     df_processed['日付'] = pd.to_datetime(df_processed['日付']).dt.strftime('%Y/%m/%d')
 
-    # CSVファイルとして出力（BOM付きUTF-8）
-    df_processed.to_csv(output_path, index=False, encoding='utf-8-sig')
+    # CSVファイルとして出力
+    df_processed.to_csv(output_path, index=False, encoding='cp932')
 
     print(f"処理が完了しました。")
-    print(f"入力: {input_path} (シート: {sheet_name})")
-    print(f"出力: {output_path}")
-    print(f"処理件数: {len(df_processed)}件")
 
 
 if __name__ == '__main__':
