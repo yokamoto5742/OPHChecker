@@ -104,10 +104,10 @@ def process_eye_surgery_data(input_file_path: str, output_file_path: str) -> Non
     df_processed = df_processed[~((df_processed['重複']) & (df_processed['右'] != '○') & (df_processed['左'] == '○'))]
 
     # 重複列を削除
-    df_processed = df_processed.drop(columns=['重複'])
+    df_processed = df_processed.drop(columns=['重複', '右', '左'])
 
     # 列の順番を並び替え
-    column_order = ['手術日', '患者ID', '氏名', '入外', '術眼', '手術', '医師', '麻酔', '術前', '右', '左']
+    column_order = ['手術日', '患者ID', '氏名', '入外', '術眼', '手術', '医師', '麻酔', '術前']
     df_processed = df_processed[column_order]
 
     # CSVファイルに保存
