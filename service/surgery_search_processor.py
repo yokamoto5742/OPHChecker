@@ -94,6 +94,18 @@ def process_eye_surgery_data(input_file_path: str, output_file_path: str) -> Non
                     else '', axis=1
     )
 
+    # 手術日と患者IDで重複を特定
+    df_processed['重複'] = df_processed.duplicated(subset=['手術日', '患者ID'], keep=False)
+
+    # 重複している行の術眼をBに変更
+    df_processed.loc[df_processed['重複'], '術眼'] = 'B'
+
+    # 重複していて、かつ左列だけに○がある行を削除
+    df_processed = df_processed[~((df_processed['重複']) & (df_processed['右'] != '○') & (df_processed['左'] == '○'))]
+
+    # 重複列を削除
+    df_processed = df_processed.drop(columns=['重複'])
+
     # 列の順番を並び替え
     column_order = ['手術日', '患者ID', '氏名', '入外', '術眼', '手術', '医師', '麻酔', '術前', '右', '左']
     df_processed = df_processed[column_order]
