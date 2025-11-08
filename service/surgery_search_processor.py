@@ -86,6 +86,18 @@ def process_eye_surgery_data(input_file_path: str, output_file_path: str) -> Non
         lambda x: unicodedata.normalize('NFKC', x) if pd.notna(x) else x
     )
 
+    # 術眼列を作成
+    df_processed['術眼'] = df_processed.apply(
+        lambda row: 'B' if row['右'] == '○' and row['左'] == '○'
+                    else 'R' if row['右'] == '○'
+                    else 'L' if row['左'] == '○'
+                    else '', axis=1
+    )
+
+    # 列の順番を並び替え
+    column_order = ['手術日', '患者ID', '氏名', '入外', '術眼', '手術', '医師', '麻酔', '術前', '右', '左']
+    df_processed = df_processed[column_order]
+
     # CSVファイルに保存
     df_processed.to_csv(output_file_path, index=False, encoding='cp932')
 
