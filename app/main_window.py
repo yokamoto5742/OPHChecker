@@ -223,13 +223,3 @@ class OPHCheckerGUI:
                 "エラー",
                 f"設定ファイルを開けません:\n\n{str(e)}",
             )
-
-
-def main() -> None:
-    root = tk.Tk()
-    app = OPHCheckerGUI(root)
-    root.mainloop()
-
-
-if __name__ == "__main__":
-    main()
