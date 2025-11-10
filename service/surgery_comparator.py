@@ -2,9 +2,9 @@ import pandas as pd
 
 
 def compare_surgery_data(
-    search_csv_path: str,
-    schedule_csv_path: str,
-    output_csv_path: str
+        search_csv_path: str,
+        schedule_csv_path: str,
+        output_csv_path: str
 ) -> None:
     """
     手術検索データと手術予定表を比較してCSV形式で出力する
@@ -18,13 +18,60 @@ def compare_surgery_data(
     df_search = pd.read_csv(search_csv_path, encoding='cp932')
     df_schedule = pd.read_csv(schedule_csv_path, encoding='cp932')
 
-    # 手術日を統一フォーマット（YYYY/MM/DD）に変換
-    df_search['手術日'] = pd.to_datetime(df_search['手術日'], format='%y/%m/%d').dt.strftime('%Y/%m/%d')
-    df_schedule['手術日'] = pd.to_datetime(df_schedule['手術日']).dt.strftime('%Y/%m/%d')
+    print(f"検索データ件数: {len(df_search)}件")
+    print(f"予定表データ件数（読み込み時）: {len(df_schedule)}件")
 
-    # 患者IDを文字列型に統一
-    df_search['患者ID'] = df_search['患者ID'].astype(str)
-    df_schedule['患者ID'] = df_schedule['患者ID'].astype(str)
+    # 手術日または患者IDが欠損している行を除外
+    df_schedule_original_count = len(df_schedule)
+    df_schedule = df_schedule.dropna(subset=['手術日', '患者ID'])
+    if len(df_schedule) < df_schedule_original_count:
+        removed_count = df_schedule_original_count - len(df_schedule)
+        print(f"警告: 予定表から手術日または患者IDが空の行を {removed_count}件 除外しました。")
+        print(f"予定表データ件数（除外後）: {len(df_schedule)}件")
+
+    # 手術日を統一フォーマット（YYYY/MM/DD）に変換
+    # 検索データの手術日フォーマットを自動判定
+    try:
+        # まずYY/MM/DD形式で試行
+        df_search['手術日'] = pd.to_datetime(df_search['手術日'], format='%y/%m/%d').dt.strftime('%Y/%m/%d')
+    except:
+        # 失敗したら自動判定
+        df_search['手術日'] = pd.to_datetime(df_search['手術日']).dt.strftime('%Y/%m/%d')
+
+    # 予定表の手術日フォーマットを自動判定して統一
+    if len(df_schedule) > 0:
+        df_schedule['手術日'] = pd.to_datetime(df_schedule['手術日']).dt.strftime('%Y/%m/%d')
+
+    # 患者IDを文字列型に統一し、前後の空白を削除
+    # 浮動小数点型の場合は整数に変換してから文字列化（1469.0 → 1469 → "1469"）
+    df_search['患者ID'] = df_search['患者ID'].astype(float).astype(int).astype(str).str.strip()
+    if len(df_schedule) > 0:
+        df_schedule['患者ID'] = df_schedule['患者ID'].astype(float).astype(int).astype(str).str.strip()
+
+    # デバッグ: マージ前の手術日と患者IDの範囲を表示
+    print(f"\n検索データの手術日範囲: {df_search['手術日'].min()} ～ {df_search['手術日'].max()}")
+
+    if len(df_schedule) > 0:
+        # NaN（欠損値）を除外してmin/maxを取得
+        valid_dates = df_schedule['手術日'].dropna()
+        if len(valid_dates) > 0:
+            print(f"予定表の手術日範囲: {valid_dates.min()} ～ {valid_dates.max()}")
+        else:
+            print("予定表に有効な手術日がありません。")
+
+        print(f"\n検索データのサンプル（最初の3件）:")
+        print(df_search[['手術日', '患者ID', '氏名']].head(3))
+        print(f"\n予定表のサンプル（最初の3件）:")
+        print(df_schedule[['手術日', '患者ID', '氏名']].head(3))
+
+        # NaNが含まれている場合は警告を表示
+        nan_count = df_schedule['手術日'].isna().sum()
+        if nan_count > 0:
+            print(f"\n警告: 予定表に手術日が空の行が {nan_count}件 あります。")
+    else:
+        print("予定表にデータがありません。")
+        print(f"\n検索データのサンプル（最初の3件）:")
+        print(df_search[['手術日', '患者ID', '氏名']].head(3))
 
     # 手術日と患者IDをキーとして左結合（left join）
     df_merged = df_search.merge(
@@ -49,7 +96,7 @@ def compare_surgery_data(
         # 比較結果を計算
         df_merged[result_col] = df_merged.apply(
             lambda row: '未入力' if pd.isna(row[schedule_col])
-                        else (row[search_col] == row[schedule_col]),
+            else (row[search_col] == row[schedule_col]),
             axis=1
         )
 
@@ -80,15 +127,14 @@ def compare_surgery_data(
 
     # 統計情報を表示
     total_rows = len(df_output)
-    unmatched_rows = 0
+    print(f"\n=== 比較結果の詳細 ===")
 
     for col in ['入外_比較', '術眼_比較', '手術_比較', '医師_比較', '麻酔_比較']:
+        true_count = (df_output[col] == True).sum()
         false_count = (df_output[col] == False).sum()
         not_entered_count = (df_output[col] == '未入力').sum()
 
-        if false_count > 0 or not_entered_count > 0:
-            unmatched_rows += 1
-            print(f"{col}: 不一致={false_count}件, 未入力={not_entered_count}件")
+        print(f"{col.replace('_比較', '')}: 一致={true_count}件, 不一致={false_count}件, 未入力={not_entered_count}件")
 
     print(f"\n処理が完了しました。")
     print(f"総件数: {total_rows}件")
