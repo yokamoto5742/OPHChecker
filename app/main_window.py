@@ -66,6 +66,19 @@ class OPHCheckerGUI:
         )
         self.settings_button.pack(side=tk.LEFT, padx=5)
 
+        self.close_button = tk.Button(
+            button_frame,
+            text="閉じる",
+            command=self._close_application,
+            font=("Arial", self.font_size + 1),
+            bg="#f44336",
+            fg="white",
+            padx=20,
+            pady=10,
+            width=15,
+        )
+        self.close_button.pack(side=tk.LEFT, padx=5)
+
         # Status/Log display
         log_label = tk.Label(self.root, text="実行ログ:", font=("Arial", self.font_size - 1))
         log_label.grid(row=2, column=0, columnspan=2, sticky="nw", padx=10, pady=(5, 0))
@@ -239,3 +252,12 @@ class OPHCheckerGUI:
                 "エラー",
                 f"設定ファイルを開けません:\n\n{str(e)}",
             )
+
+    def _close_application(self) -> None:
+        if self.start_button.cget("state") == tk.DISABLED:
+            messagebox.showwarning(
+                "実行中",
+                "分析処理が実行中です。\n処理が完了してからアプリケーションを閉じてください。",
+            )
+            return
+        self.root.quit()
