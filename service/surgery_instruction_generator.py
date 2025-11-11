@@ -2,6 +2,7 @@ from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
+from openpyxl import load_workbook
 
 
 def generate_surgery_instruction(comparison_result: str, output_path: str) -> str:
@@ -34,12 +35,26 @@ def generate_surgery_instruction(comparison_result: str, output_path: str) -> st
     Path(output_path).mkdir(parents=True, exist_ok=True)
 
     # 現在時刻を含むファイル名を生成
-    timestamp = datetime.now().strftime('%y%m%d_%H%M')
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M')
     output_filename = f'眼科手術指示確認{timestamp}.xlsx'
     output_filepath = Path(output_path) / output_filename
 
-    # xlsxファイルとして保存
-    df_output.to_excel(output_filepath, index=False, engine='openpyxl')
+    # テンプレートファイルを読み込み
+    template_path = r'C:\Shinseikai\OPHChecker\眼科手術指示確認.xlsx'
+    wb = load_workbook(template_path)
+    ws = wb.active
+
+    # ヘッダー行を書き込み
+    for col_idx, column_name in enumerate(df_output.columns, start=1):
+        ws.cell(row=1, column=col_idx, value=column_name)
+
+    # データ行を書き込み
+    for row_idx, row_data in enumerate(df_output.values, start=2):
+        for col_idx, value in enumerate(row_data, start=1):
+            ws.cell(row=row_idx, column=col_idx, value=value)
+
+    # ファイルとして保存
+    wb.save(output_filepath)
 
     print(f"処理が完了しました")
     print(f"エラー件数: {len(df_errors)}件")

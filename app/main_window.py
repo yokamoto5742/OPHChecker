@@ -7,6 +7,7 @@ from tkinter import messagebox, scrolledtext
 
 from app import __version__
 from service.surgery_comparator import compare_surgery_data
+from service.surgery_instruction_generator import generate_surgery_instruction
 from service.surgery_schedule_processor import process_surgery_schedule
 from service.surgery_search_processor import process_eye_surgery_data
 from utils.config_manager import (
@@ -151,15 +152,14 @@ class OPHCheckerGUI:
             surgery_schedule_path = paths["surgery_schedule"]
             output_path = paths["output_path"]
             processed_surgery_schedule = paths['processed_surgery_schedule']
-            processed_surgery_search_data =  paths['processed_surgery_search_data']
+            processed_surgery_search_data = paths['processed_surgery_search_data']
             comparison_result = paths['comparison_result']
-            
 
             # Create output directory if not exists
             Path(output_path).mkdir(parents=True, exist_ok=True)
 
             # Process 1: Surgery Schedule
-            self._log_message("\n[1/3] 手術予定表の処理を開始...")
+            self._log_message("\n[1/4] 手術予定表の処理を開始...")
             self.status_var.set("手術予定表を処理中...")
 
             try:
@@ -171,7 +171,7 @@ class OPHCheckerGUI:
                 raise
 
             # Process 2: Eye Surgery Data
-            self._log_message("\n[2/3] 眼科システムデータの処理を開始...")
+            self._log_message("\n[2/4] 眼科システムデータの処理を開始...")
             self.status_var.set("眼科システムデータを処理中...")
 
             try:
@@ -183,13 +183,25 @@ class OPHCheckerGUI:
                 raise
 
             # Process 3: Compare Surgery Data
-            self._log_message("\n[3/3] データ比較を開始...")
+            self._log_message("\n[3/4] データ比較を開始...")
             self.status_var.set("データを比較中...")
 
             try:
                 compare_surgery_data(processed_surgery_search_data, processed_surgery_schedule, comparison_result)
                 self._log_message("✓ データ比較が完了しました")
                 self._log_message(f"  出力: {comparison_result}")
+            except Exception as e:
+                self._log_message(f"✗ エラー: {str(e)}")
+                raise
+
+            # Process 4: Generate Surgery Instruction
+            self._log_message("\n[4/4] 手術指示確認書の生成を開始...")
+            self.status_var.set("手術指示確認書を生成中...")
+
+            try:
+                instruction_file = generate_surgery_instruction(comparison_result, output_path)
+                self._log_message("✓ 手術指示確認書の生成が完了しました")
+                self._log_message(f"  出力: {instruction_file}")
             except Exception as e:
                 self._log_message(f"✗ エラー: {str(e)}")
                 raise
