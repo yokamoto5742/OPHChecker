@@ -34,7 +34,7 @@ def process_eye_surgery_data(input_file_path: str, output_file_path: str) -> Non
     df_processed['手術日'] = pd.to_datetime(df_processed['手術日'], format='%y/%m/%d').dt.strftime('%Y/%m/%d')
 
     # 麻酔の値を変換
-    anesthesia_mapping = {
+    anesthesia_replacements = {
         '球後麻酔': '局所',
         '局所麻酔': '局所',
         '点眼麻酔': '局所',
@@ -42,7 +42,7 @@ def process_eye_surgery_data(input_file_path: str, output_file_path: str) -> Non
         '結膜下': '局所',
     }
     df_processed['麻酔'] = df_processed['麻酔'].map(
-        lambda x: anesthesia_mapping.get(x, x) if pd.notna(x) else x
+        lambda x: anesthesia_replacements.get(x, x) if pd.notna(x) else x
     )
 
     # 術者を名字に変換
@@ -57,18 +57,18 @@ def process_eye_surgery_data(input_file_path: str, output_file_path: str) -> Non
     df_processed['医師'] = df_processed['医師'].replace(surgeon_replacements)
 
     # 入外の値を変換
-    inpatient_mapping = {
+    inpatient_replacements = {
         'あやめ': '入院',
         'わかば': '入院',
         'さくら': '入院',
         '外来': '外来'
     }
     df_processed['入外'] = df_processed['入外'].map(
-        lambda x: inpatient_mapping.get(x, x) if pd.notna(x) else x
+        lambda x: inpatient_replacements.get(x, x) if pd.notna(x) else x
     )
 
     # 手術列から特定の文字列を削除
-    strings_to_remove = [
+    surgery_strings_to_remove = [
         '(クラレオントーリック)',
         '(クラレオンパンオプティクス)',
         '(クラレオンパンオプティクストーリック)',
@@ -78,11 +78,11 @@ def process_eye_surgery_data(input_file_path: str, output_file_path: str) -> Non
         '(トーリック)',
         '(inject)',
     ]
-    for string in strings_to_remove:
+    for string in surgery_strings_to_remove:
         df_processed['手術'] = df_processed['手術'].str.replace(string, '', regex=False)
 
     # 氏名列または手術列で特定の文字列が含まれている行を削除
-    exclusion_keywords = [
+    exclusion_line_keywords = [
         '★',
         '霰粒腫',
         '術式未定',
@@ -92,7 +92,7 @@ def process_eye_surgery_data(input_file_path: str, output_file_path: str) -> Non
     columns_to_filter = ['氏名','手術']
 
     for column in columns_to_filter:
-        for keyword in exclusion_keywords:
+        for keyword in exclusion_line_keywords:
             df_processed = df_processed[~df_processed[column].str.contains(keyword, na=False)]
 
     # 手術列の値を全角カナに変換
