@@ -142,10 +142,14 @@ def compare_surgery_data(
 
 
 if __name__ == '__main__':
-    # ファイルパスを指定
-    processed_surgery_search_data = r'C:\Shinseikai\OPHChecker\processed\processed_surgery_search.csv'
-    processed_surgery_schedule = r'C:\Shinseikai\OPHChecker\processed\processed_surgery_schedule.csv'
-    comparison_result = r'C:\Shinseikai\OPHChecker\processed\comparison_result.csv'
+    from utils.config_manager import load_config, get_paths
+
+    config = load_config()
+    paths = get_paths(config)
 
     # 比較処理を実行
-    compare_surgery_data(processed_surgery_search_data, processed_surgery_schedule, comparison_result)
+    compare_surgery_data(
+        paths['processed_surgery_search_data'],
+        paths['processed_surgery_schedule'],
+        paths['comparison_result']
+    )

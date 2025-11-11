@@ -37,6 +37,7 @@ DEFAULT_CONFIG = {
         'processed_surgery_search_data': '',
         'surgery_schedule': '',
         'processed_surgery_schedule': '',
+        'comparison_result': '',
         'template_path': '',
         'output_path': '',
     },
@@ -110,6 +111,7 @@ def get_paths(config: configparser.ConfigParser) -> dict:
         'processed_surgery_search_data': config.get('Paths', 'processed_surgery_search_data', fallback=''),
         'surgery_schedule': config.get('Paths', 'surgery_schedule', fallback=''),
         'processed_surgery_schedule': config.get('Paths', 'processed_surgery_schedule', fallback=''),
+        'comparison_result': config.get('Paths', 'comparison_result', fallback=''),
         'template_path': config.get('Paths', 'template_path', fallback=''),
         'output_path': config.get('Paths', 'output_path', fallback=''),
     }
