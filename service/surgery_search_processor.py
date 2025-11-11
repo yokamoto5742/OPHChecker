@@ -127,10 +127,8 @@ def process_eye_surgery_data(input_file_path: str, output_file_path: str) -> Non
     # CSVファイルに保存
     df_processed.to_csv(output_file_path, index=False, encoding='cp932')
 
-    print(f'処理完了: {output_file_path}')
-
 if __name__ == '__main__':
-    input_path = r'C:\Shinseikai\OPHChecker\input\眼科システム手術検索.csv'
-    output_path = r'C:\Shinseikai\OPHChecker\processed_surgery_search.csv'
+    surgery_search_data = r'C:\Shinseikai\OPHChecker\input\眼科システム手術検索.csv'
+    processed_surgery_search_data = r'C:\Shinseikai\OPHChecker\processed_surgery_search.csv'
 
-    process_eye_surgery_data(input_path, output_path)
+    process_eye_surgery_data(surgery_search_data, processed_surgery_search_data)
