@@ -15,13 +15,16 @@ from utils.config_manager import (
     get_config_path,
     get_exclusion_line_keywords,
     get_paths,
+    get_replacement_dict,
     get_surgery_strings_to_remove,
     load_config,
     save_config,
     save_exclusion_line_keywords,
+    save_replacement_dict,
     save_surgery_strings_to_remove,
 )
 from widgets.exclude_items_dialog import ExcludeItemsDialog
+from widgets.replacements_dialog import ReplacementsDialog
 
 class OPHCheckerGUI:
     def __init__(self, root: tk.Tk) -> None:
@@ -84,6 +87,19 @@ class OPHCheckerGUI:
             width=15,
         )
         self.exclude_items_button.pack(side=tk.LEFT, padx=5)
+
+        self.replacements_button = tk.Button(
+            button_frame,
+            text="置換設定編集",
+            command=self._open_replacements,
+            font=("Arial", self.font_size + 1),
+            bg="#00BCD4",
+            fg="white",
+            padx=20,
+            pady=10,
+            width=15,
+        )
+        self.replacements_button.pack(side=tk.LEFT, padx=5)
 
         self.copy_input_path_button = tk.Button(
             button_frame,
@@ -326,6 +342,37 @@ class OPHCheckerGUI:
         except Exception as e:
             self._log_message(f"✗ エラー: 除外項目の編集中にエラーが発生しました: {str(e)}")
             messagebox.showerror("エラー", f"除外項目の編集中にエラーが発生しました:\n\n{str(e)}", parent=self.root)
+
+
+    def _open_replacements(self) -> None:
+        try:
+            # 現在の置換設定を取得
+            anesthesia_replacements = get_replacement_dict(self.config, 'Replacements', 'anesthesia_replacements')
+            surgeon_replacements = get_replacement_dict(self.config, 'Replacements', 'surgeon_replacements')
+            inpatient_replacements = get_replacement_dict(self.config, 'Replacements', 'inpatient_replacements')
+
+            # ダイアログを表示
+            dialog = ReplacementsDialog(
+                self.root,
+                anesthesia_replacements,
+                surgeon_replacements,
+                inpatient_replacements,
+                self.font_size,
+            )
+            result = dialog.show()
+
+            # 結果が返されたら保存
+            if result:
+                save_replacement_dict(self.config, 'Replacements', 'anesthesia_replacements', result['anesthesia_replacements'])
+                save_replacement_dict(self.config, 'Replacements', 'surgeon_replacements', result['surgeon_replacements'])
+                save_replacement_dict(self.config, 'Replacements', 'inpatient_replacements', result['inpatient_replacements'])
+                save_config(self.config)
+
+                self._log_message("✓ 置換設定を保存しました")
+                messagebox.showinfo("保存完了", "置換設定を保存しました", parent=self.root)
+        except Exception as e:
+            self._log_message(f"✗ エラー: 置換設定の編集中にエラーが発生しました: {str(e)}")
+            messagebox.showerror("エラー", f"置換設定の編集中にエラーが発生しました:\n\n{str(e)}", parent=self.root)
 
     def _copy_input_path_to_clipboard(self) -> None:
         paths = get_paths(self.config)

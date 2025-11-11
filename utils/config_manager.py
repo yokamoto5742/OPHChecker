@@ -159,6 +159,21 @@ def get_replacement_dict(config: configparser.ConfigParser, section: str, key: s
     return replacement_dict
 
 
+def save_replacement_dict(config: configparser.ConfigParser, section: str, key: str, replacement_dict: dict[str, str]) -> None:
+    """
+    置換辞書を設定ファイルに保存
+
+    Args:
+        config: configparserオブジェクト
+        section: セクション名
+        key: キー名
+        replacement_dict: 置換辞書
+    """
+    pairs = [f"{source}:{target}" for source, target in replacement_dict.items()]
+    replacement_str = ','.join(pairs)
+    config.set(section, key, replacement_str)
+
+
 def save_exclusion_line_keywords(config: configparser.ConfigParser, keywords: list[str]) -> None:
     """
     行除外キーワードを保存
