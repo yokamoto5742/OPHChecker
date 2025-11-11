@@ -67,6 +67,19 @@ class OPHCheckerGUI:
         )
         self.settings_button.pack(side=tk.LEFT, padx=5)
 
+        self.copy_input_path_button = tk.Button(
+            button_frame,
+            text="入力フォルダパスコピー",
+            command=self._copy_input_path_to_clipboard,
+            font=("Arial", self.font_size + 1),
+            bg="#FF9800",
+            fg="white",
+            padx=20,
+            pady=10,
+            width=20,
+        )
+        self.copy_input_path_button.pack(side=tk.LEFT, padx=5)
+
         self.close_button = tk.Button(
             button_frame,
             text="閉じる",
@@ -268,6 +281,48 @@ class OPHCheckerGUI:
                 "エラー",
                 f"設定ファイルを開けません:\n\n{str(e)}",
             )
+
+    def _copy_input_path_to_clipboard(self) -> None:
+        paths = get_paths(self.config)
+        input_path = paths.get("input_path", "")
+
+        if not input_path:
+            self._log_message("✗ 入力フォルダパスが設定されていません")
+            messagebox.showwarning("警告", "入力フォルダパスが設定されていません")
+            return
+
+        try:
+            self.root.clipboard_clear()
+            self.root.clipboard_append(input_path)
+            self.root.update()
+            self._log_message(f"✓ 入力フォルダパスをクリップボードにコピーしました: {input_path}")
+            self.status_var.set("入力フォルダパスをコピーしました")
+
+            # 3秒後に自動的に消えるダイアログを表示
+            self._show_auto_close_message("コピー完了", f"入力フォルダパスをクリップボードにコピーしました:\n\n{input_path}", 3000)
+        except Exception as e:
+            self._log_message(f"✗ エラー: クリップボードへのコピーに失敗しました: {str(e)}")
+            messagebox.showerror("エラー", f"クリップボードへのコピーに失敗しました:\n\n{str(e)}")
+
+    def _show_auto_close_message(self, title: str, message: str, duration_ms: int = 3000) -> None:
+        """3秒後に自動的に閉じるメッセージダイアログを表示"""
+        dialog = tk.Toplevel(self.root)
+        dialog.title(title)
+        dialog.transient(self.root)
+        dialog.grab_set()
+
+        # ダイアログの内容
+        label = tk.Label(dialog, text=message, font=("Arial", self.font_size), padx=20, pady=20)
+        label.pack()
+
+        # ウィンドウを中央に配置
+        dialog.update_idletasks()
+        x = (dialog.winfo_screenwidth() // 2) - (dialog.winfo_width() // 2)
+        y = (dialog.winfo_screenheight() // 2) - (dialog.winfo_height() // 2)
+        dialog.geometry(f"+{x}+{y}")
+
+        # 指定時間後に自動的に閉じる
+        dialog.after(duration_ms, dialog.destroy)
 
     def _close_application(self) -> None:
         if self.start_button.cget("state") == tk.DISABLED:

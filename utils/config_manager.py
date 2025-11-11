@@ -107,6 +107,7 @@ def get_dialog_settings(config: configparser.ConfigParser) -> dict:
 
 def get_paths(config: configparser.ConfigParser) -> dict:
     return {
+        'input_path': config.get('Paths', 'input_path', fallback=''),
         'surgery_search_data': config.get('Paths', 'surgery_search_data', fallback=''),
         'processed_surgery_search_data': config.get('Paths', 'processed_surgery_search_data', fallback=''),
         'surgery_schedule': config.get('Paths', 'surgery_schedule', fallback=''),
