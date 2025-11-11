@@ -8,7 +8,12 @@ from tkinter import messagebox, scrolledtext
 from service.surgery_comparator import compare_surgery_data
 from service.surgery_schedule_processor import process_surgery_schedule
 from service.surgery_search_processor import process_eye_surgery_data
-from utils.config_manager import load_config, save_config
+from utils.config_manager import (
+    get_appearance_settings,
+    get_config_path,
+    get_paths,
+    load_config,
+)
 
 
 class OPHCheckerGUI:
@@ -20,10 +25,11 @@ class OPHCheckerGUI:
         self._setup_ui()
 
     def _apply_appearance_settings(self) -> None:
-        window_width = self.config.getint("Appearance", "window_width", fallback=350)
-        window_height = self.config.getint("Appearance", "window_height", fallback=350)
+        appearance = get_appearance_settings(self.config)
+        window_width = appearance['window_width']
+        window_height = appearance['window_height']
         self.root.geometry(f"{window_width}x{window_height}")
-        self.font_size = self.config.getint("Appearance", "font_size", fallback=11)
+        self.font_size = appearance['font_size']
 
     def _setup_ui(self) -> None:
         self.root.grid_rowconfigure(2, weight=1)
@@ -104,14 +110,11 @@ class OPHCheckerGUI:
         thread.start()
 
     def _validate_config(self) -> bool:
-        required_paths = [
-            "surgery_search_data",
-            "surgery_schedule",
-            "output_path",
-        ]
+        paths = get_paths(self.config)
+        required_paths = ["surgery_search_data", "surgery_schedule", "output_path"]
 
         for path_key in required_paths:
-            path_value = self.config.get("Paths", path_key, fallback=None)
+            path_value = paths.get(path_key)
             if not path_value:
                 messagebox.showerror(
                     "設定エラー",
@@ -135,9 +138,10 @@ class OPHCheckerGUI:
             self._log_message("=" * 60)
 
             # Get paths from config
-            surgery_search_path = self.config.get("Paths", "surgery_search_data")
-            surgery_schedule_path = self.config.get("Paths", "surgery_schedule")
-            output_path = self.config.get("Paths", "output_path")
+            paths = get_paths(self.config)
+            surgery_search_path = paths["surgery_search_data"]
+            surgery_schedule_path = paths["surgery_schedule"]
+            output_path = paths["output_path"]
 
             # Create output directory if not exists
             Path(output_path).mkdir(parents=True, exist_ok=True)
@@ -204,11 +208,7 @@ class OPHCheckerGUI:
             self.settings_button.config(state=tk.NORMAL)
 
     def _open_settings(self) -> None:
-        config_path = self.config.get("Paths", "config_path", fallback=None)
-        if not config_path:
-            from utils.config_manager import get_config_path
-
-            config_path = str(get_config_path())
+        config_path = str(get_config_path())
 
         try:
             if sys.platform == "win32":
