@@ -3,17 +3,17 @@ import unicodedata
 import pandas as pd
 
 
-def process_surgery_schedule(input_path: str, output_path: str, sheet_name: str = '南館2') -> None:
+def process_surgery_schedule(surgery_schedule: str, processed_surgery_schedule: str, sheet_name: str = '南館2') -> None:
     """
     手術予定表を処理してCSV形式で出力する
 
     Args:
-        input_path: 入力Excelファイルのパス
-        output_path: 出力CSVファイルのパス
+        surgery_schedule: 入力Excelファイルのパス
+        processed_surgery_schedule: 出力CSVファイルのパス
         sheet_name: 処理対象のシート名（デフォルト: '南館2'）
     """
     # Excelファイルを読み込み（0行目は削除、1行目をヘッダーとして使用）
-    df = pd.read_excel(input_path, sheet_name=sheet_name, header=1)
+    df = pd.read_excel(surgery_schedule, sheet_name=sheet_name, header=1)
 
     # 必要な列を選択して並び替え
     required_columns = ['日付', 'ID', '氏名', '入外', '術式', '麻酔', '術者']
@@ -41,15 +41,15 @@ def process_surgery_schedule(input_path: str, output_path: str, sheet_name: str 
     df_processed = df_processed[['手術日', '患者ID', '氏名', '入外', '術眼', '手術', '医師', '麻酔']]
 
     # CSVファイルとして保存
-    df_processed.to_csv(output_path, index=False, encoding='cp932')
+    df_processed.to_csv(processed_surgery_schedule, index=False, encoding='cp932')
 
     print(f"処理が完了しました。")
 
 
 if __name__ == '__main__':
     # ファイルパスを指定
-    input_path = r'C:\Shinseikai\OPHChecker\input\手術予定表.xls'
-    output_path = r'C:\Shinseikai\OPHChecker\processed_surgery_schedule.csv'
+    surgery_schedule = r'C:\Shinseikai\OPHChecker\input\手術予定表.xls'
+    processed_surgery_schedule = r'C:\Shinseikai\OPHChecker\processed_surgery_schedule.csv'
 
     # 処理を実行
-    process_surgery_schedule(input_path, output_path)
+    process_surgery_schedule(surgery_schedule, processed_surgery_schedule)
