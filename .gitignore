@@ -10,3 +10,4 @@ logs/
 *.iml
 
 error_log.txt
+/nul
