@@ -30,6 +30,9 @@ def process_eye_surgery_data(input_file_path: str, output_file_path: str) -> Non
 
     df_processed = df[required_columns].copy()
 
+    # 手術日をYYYY/MM/DD形式に変換
+    df_processed['手術日'] = pd.to_datetime(df_processed['手術日']).dt.strftime('%Y/%m/%d')
+
     # 麻酔の値を変換
     anesthesia_mapping = {
         '球後麻酔': '局所',

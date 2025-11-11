@@ -186,10 +186,8 @@ class OPHCheckerGUI:
             self._log_message("=" * 60)
             self.status_var.set("処理完了")
 
-            messagebox.showinfo(
-                "完了",
-                f"分析処理が完了しました。\n\n出力フォルダ:\n{output_path}",
-            )
+            # Open output folder
+            self._open_output_folder(output_path)
 
         except Exception as e:
             self._log_message("\n" + "=" * 60)
@@ -201,6 +199,23 @@ class OPHCheckerGUI:
         finally:
             self.start_button.config(state=tk.NORMAL)
             self.settings_button.config(state=tk.NORMAL)
+
+    def _open_output_folder(self, output_path: str) -> None:
+        try:
+            if sys.platform == "win32":
+                os.startfile(output_path)
+            elif sys.platform == "darwin":
+                os.system(f"open '{output_path}'")
+            else:
+                os.system(f"xdg-open '{output_path}'")
+
+            self._log_message(f"出力フォルダを開きました: {output_path}")
+        except Exception as e:
+            self._log_message(f"✗ エラー: 出力フォルダを開けません: {str(e)}")
+            messagebox.showerror(
+                "エラー",
+                f"出力フォルダを開けません:\n\n{str(e)}",
+            )
 
     def _open_settings(self) -> None:
         config_path = str(get_config_path())

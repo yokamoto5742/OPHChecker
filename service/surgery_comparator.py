@@ -29,19 +29,6 @@ def compare_surgery_data(
         print(f"警告: 予定表から手術日または患者IDが空の行を {removed_count}件 除外しました。")
         print(f"予定表データ件数（除外後）: {len(df_schedule)}件")
 
-    # 手術日を統一フォーマット（YYYY/MM/DD）に変換
-    # 検索データの手術日フォーマットを自動判定
-    try:
-        # まずYY/MM/DD形式で試行
-        df_search['手術日'] = pd.to_datetime(df_search['手術日'], format='%y/%m/%d').dt.strftime('%Y/%m/%d')
-    except:
-        # 失敗したら自動判定
-        df_search['手術日'] = pd.to_datetime(df_search['手術日']).dt.strftime('%Y/%m/%d')
-
-    # 予定表の手術日フォーマットを自動判定して統一
-    if len(df_schedule) > 0:
-        df_schedule['手術日'] = pd.to_datetime(df_schedule['手術日']).dt.strftime('%Y/%m/%d')
-
     # 患者IDを文字列型に統一し、前後の空白を削除
     # 浮動小数点型の場合は整数に変換してから文字列化（1469.0 → 1469 → "1469"）
     df_search['患者ID'] = df_search['患者ID'].astype(float).astype(int).astype(str).str.strip()
