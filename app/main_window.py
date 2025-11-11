@@ -200,8 +200,11 @@ class OPHCheckerGUI:
 
             try:
                 instruction_file = surgery_error_extractor(comparison_result, output_path)
-                self._log_message("✓ 手術指示確認書の生成が完了しました")
-                self._log_message(f"  出力: {instruction_file}")
+                if instruction_file:
+                    self._log_message("✓ 手術指示確認書の生成が完了しました")
+                    self._log_message(f"  出力: {instruction_file}")
+                else:
+                    self._log_message("✓ 不一致および未入力はありませんでした")
             except Exception as e:
                 self._log_message(f"✗ エラー: {str(e)}")
                 raise
