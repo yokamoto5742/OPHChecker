@@ -15,9 +15,15 @@ class OPHCheckerGUI:
     def __init__(self, root: tk.Tk) -> None:
         self.root = root
         self.root.title("OPHChecker")
-        self.root.geometry("600x500")
         self.config = load_config()
+        self._apply_appearance_settings()
         self._setup_ui()
+
+    def _apply_appearance_settings(self) -> None:
+        window_width = self.config.getint("Appearance", "window_width", fallback=350)
+        window_height = self.config.getint("Appearance", "window_height", fallback=350)
+        self.root.geometry(f"{window_width}x{window_height}")
+        self.font_size = self.config.getint("Appearance", "font_size", fallback=11)
 
     def _setup_ui(self) -> None:
         self.root.grid_rowconfigure(2, weight=1)
@@ -25,7 +31,7 @@ class OPHCheckerGUI:
 
         # Title
         title_label = tk.Label(
-            self.root, text="眼科手術データ分析ツール", font=("Arial", 16, "bold")
+            self.root, text="眼科手術データ分析ツール", font=("Arial", self.font_size + 5, "bold")
         )
         title_label.grid(row=0, column=0, columnspan=2, pady=10)
 
@@ -37,7 +43,7 @@ class OPHCheckerGUI:
             button_frame,
             text="分析開始",
             command=self._start_analysis,
-            font=("Arial", 12),
+            font=("Arial", self.font_size + 1),
             bg="#4CAF50",
             fg="white",
             padx=20,
@@ -50,7 +56,7 @@ class OPHCheckerGUI:
             button_frame,
             text="設定",
             command=self._open_settings,
-            font=("Arial", 12),
+            font=("Arial", self.font_size + 1),
             bg="#2196F3",
             fg="white",
             padx=20,
@@ -60,11 +66,11 @@ class OPHCheckerGUI:
         self.settings_button.pack(side=tk.LEFT, padx=5)
 
         # Status/Log display
-        log_label = tk.Label(self.root, text="実行ログ:", font=("Arial", 10))
+        log_label = tk.Label(self.root, text="実行ログ:", font=("Arial", self.font_size - 1))
         log_label.grid(row=2, column=0, columnspan=2, sticky="nw", padx=10, pady=(5, 0))
 
         self.log_text = scrolledtext.ScrolledText(
-            self.root, height=15, width=70, font=("Courier", 9)
+            self.root, height=15, width=70, font=("Courier", self.font_size - 2)
         )
         self.log_text.grid(row=3, column=0, columnspan=2, padx=10, pady=10, sticky="nsew")
         self.root.grid_rowconfigure(3, weight=1)
@@ -76,7 +82,7 @@ class OPHCheckerGUI:
             textvariable=self.status_var,
             relief=tk.SUNKEN,
             anchor="w",
-            font=("Arial", 9),
+            font=("Arial", self.font_size - 2),
         )
         status_bar.grid(row=4, column=0, columnspan=2, sticky="ew", padx=5, pady=5)
 
