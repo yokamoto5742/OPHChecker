@@ -6,6 +6,7 @@ from pathlib import Path
 from tkinter import messagebox, scrolledtext
 
 from app import __version__
+from app.exclude_items_dialog import ExcludeItemsDialog
 from service.surgery_comparator import compare_surgery_data
 from service.surgery_error_extractor import surgery_error_extractor
 from service.surgery_schedule_processor import process_surgery_schedule
@@ -13,8 +14,13 @@ from service.surgery_search_processor import process_eye_surgery_data
 from utils.config_manager import (
     get_appearance_settings,
     get_config_path,
+    get_exclusion_line_keywords,
     get_paths,
+    get_surgery_strings_to_remove,
     load_config,
+    save_config,
+    save_exclusion_line_keywords,
+    save_surgery_strings_to_remove,
 )
 
 
@@ -66,6 +72,19 @@ class OPHCheckerGUI:
             width=15,
         )
         self.settings_button.pack(side=tk.LEFT, padx=5)
+
+        self.exclude_items_button = tk.Button(
+            button_frame,
+            text="除外項目編集",
+            command=self._open_exclude_items,
+            font=("Arial", self.font_size + 1),
+            bg="#9C27B0",
+            fg="white",
+            padx=20,
+            pady=10,
+            width=15,
+        )
+        self.exclude_items_button.pack(side=tk.LEFT, padx=5)
 
         self.copy_input_path_button = tk.Button(
             button_frame,
@@ -281,6 +300,33 @@ class OPHCheckerGUI:
                 "エラー",
                 f"設定ファイルを開けません:\n\n{str(e)}",
             )
+
+    def _open_exclude_items(self) -> None:
+        try:
+            # 現在の除外項目を取得
+            exclusion_line_keywords = get_exclusion_line_keywords(self.config)
+            surgery_strings_to_remove = get_surgery_strings_to_remove(self.config)
+
+            # ダイアログを表示
+            dialog = ExcludeItemsDialog(
+                self.root,
+                exclusion_line_keywords,
+                surgery_strings_to_remove,
+                self.font_size,
+            )
+            result = dialog.show()
+
+            # 結果が返されたら保存
+            if result:
+                save_exclusion_line_keywords(self.config, result['exclusion_line_keywords'])
+                save_surgery_strings_to_remove(self.config, result['surgery_strings_to_remove'])
+                save_config(self.config)
+
+                self._log_message("✓ 除外項目を保存しました")
+                messagebox.showinfo("保存完了", "除外項目を保存しました", parent=self.root)
+        except Exception as e:
+            self._log_message(f"✗ エラー: 除外項目の編集中にエラーが発生しました: {str(e)}")
+            messagebox.showerror("エラー", f"除外項目の編集中にエラーが発生しました:\n\n{str(e)}", parent=self.root)
 
     def _copy_input_path_to_clipboard(self) -> None:
         paths = get_paths(self.config)

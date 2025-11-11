@@ -157,3 +157,27 @@ def get_replacement_dict(config: configparser.ConfigParser, section: str, key: s
             replacement_dict[source.strip()] = target.strip()
 
     return replacement_dict
+
+
+def save_exclusion_line_keywords(config: configparser.ConfigParser, keywords: list[str]) -> None:
+    """
+    行除外キーワードを保存
+
+    Args:
+        config: configparserオブジェクト
+        keywords: キーワードリスト
+    """
+    keywords_str = ','.join(keyword.strip() for keyword in keywords if keyword.strip())
+    config.set('ExcludeItems', 'exclusion_line_keywords', keywords_str)
+
+
+def save_surgery_strings_to_remove(config: configparser.ConfigParser, strings: list[str]) -> None:
+    """
+    手術文字列削除リストを保存
+
+    Args:
+        config: configparserオブジェクト
+        strings: 削除文字列リスト
+    """
+    strings_str = ','.join(string.strip() for string in strings if string.strip())
+    config.set('ExcludeItems', 'surgery_strings_to_remove', strings_str)
