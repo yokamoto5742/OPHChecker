@@ -29,6 +29,28 @@ def compare_surgery_data(
         print(f"警告: 予定表から手術日または患者IDが空の行を {removed_count}件 除外しました。")
         print(f"予定表データ件数（除外後）: {len(df_schedule)}件")
 
+    # 手術日を統一フォーマット（YYYY/MM/DD）に変換
+    # 検索データの手術日フォーマットを自動判定
+    try:
+        # まずYY/MM/DD形式で試行
+        df_search['手術日'] = pd.to_datetime(df_search['手術日'], format='%y/%m/%d').dt.strftime('%Y/%m/%d')
+    except:
+        # 失敗したら自動判定
+        df_search['手術日'] = pd.to_datetime(df_search['手術日']).dt.strftime('%Y/%m/%d')
+
+    # 予定表の手術日フォーマットを自動判定して統一
+    if len(df_schedule) > 0:
+        df_schedule['手術日'] = pd.to_datetime(df_schedule['手術日']).dt.strftime('%Y/%m/%d')
+
+    # 患者IDを文字列型に統一し、前後の空白を削除
+    # 浮動小数点型の場合は整数に変換してから文字列化（1469.0 → 1469 → "1469"）
+    df_search['患者ID'] = df_search['患者ID'].astype(float).astype(int).astype(str).str.strip()
+    if len(df_schedule) > 0:
+        df_schedule['患者ID'] = df_schedule['患者ID'].astype(float).astype(int).astype(str).str.strip()
+
+    # デバッグ: マージ前の手術日と患者IDの範囲を表示
+    print(f"\n検索データの手術日範囲: {df_search['手術日'].min()} ～ {df_search['手術日'].max()}")
+
     if len(df_schedule) > 0:
         # NaN（欠損値）を除外してmin/maxを取得
         valid_dates = df_schedule['手術日'].dropna()
@@ -36,6 +58,11 @@ def compare_surgery_data(
             print(f"予定表の手術日範囲: {valid_dates.min()} ～ {valid_dates.max()}")
         else:
             print("予定表に有効な手術日がありません。")
+
+        print(f"\n検索データのサンプル（最初の3件）:")
+        print(df_search[['手術日', '患者ID', '氏名']].head(3))
+        print(f"\n予定表のサンプル（最初の3件）:")
+        print(df_schedule[['手術日', '患者ID', '氏名']].head(3))
 
         # NaNが含まれている場合は警告を表示
         nan_count = df_schedule['手術日'].isna().sum()
