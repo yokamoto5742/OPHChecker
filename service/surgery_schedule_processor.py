@@ -20,10 +20,10 @@ def process_surgery_schedule(surgery_schedule: str, processed_surgery_schedule: 
     df_processed = df[required_columns].copy()
 
     # 日付列を文字列形式に変換（YYYY/MM/DD形式）
-    df_processed.loc[:, '日付'] = pd.to_datetime(df_processed['日付']).dt.strftime('%Y/%m/%d')  # type: ignore
+    df_processed.loc[:, '日付'] = pd.to_datetime(df_processed['日付']).dt.strftime('%Y/%m/%d')
 
     # 術式列の値を全角カナに変換
-    df_processed.loc[:, '術式'] = df_processed['術式'].apply(  # type: ignore
+    df_processed.loc[:, '術式'] = df_processed['術式'].apply(
         lambda x: unicodedata.normalize('NFKC', str(x)) if pd.notna(x) else x
     )
 
@@ -37,7 +37,7 @@ def process_surgery_schedule(surgery_schedule: str, processed_surgery_schedule: 
     # 列名を変更
     df_processed = df_processed.rename(columns={'日付': '手術日', 'ID': '患者ID', '術者': '医師',})
 
-    # 列の順番を調整
+    # 列の順番を並び替え
     df_processed = df_processed[['手術日', '患者ID', '氏名', '入外', '術眼', '手術', '医師', '麻酔']]
 
     # CSVファイルとして保存
