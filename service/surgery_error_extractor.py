@@ -5,7 +5,7 @@ import pandas as pd
 from openpyxl import load_workbook
 
 
-def generate_surgery_instruction(comparison_result: str, output_path: str) -> str:
+def surgery_error_extractor(comparison_result: str, output_path: str) -> str:
     """
     comparison_resultからFALSEまたは未入力が含まれる行を抽出してxlsxファイルとして出力
 
@@ -69,7 +69,7 @@ if __name__ == '__main__':
     config = load_config()
     paths = get_paths(config)
 
-    generate_surgery_instruction(
+    surgery_error_extractor(
         paths['comparison_result'],
         paths['output_path']
     )

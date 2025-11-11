@@ -7,7 +7,7 @@ from tkinter import messagebox, scrolledtext
 
 from app import __version__
 from service.surgery_comparator import compare_surgery_data
-from service.surgery_instruction_generator import generate_surgery_instruction
+from service.surgery_error_extractor import surgery_error_extractor
 from service.surgery_schedule_processor import process_surgery_schedule
 from service.surgery_search_processor import process_eye_surgery_data
 from utils.config_manager import (
@@ -199,7 +199,7 @@ class OPHCheckerGUI:
             self.status_var.set("手術指示確認書を生成中...")
 
             try:
-                instruction_file = generate_surgery_instruction(comparison_result, output_path)
+                instruction_file = surgery_error_extractor(comparison_result, output_path)
                 self._log_message("✓ 手術指示確認書の生成が完了しました")
                 self._log_message(f"  出力: {instruction_file}")
             except Exception as e:
