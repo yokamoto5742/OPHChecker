@@ -29,12 +29,20 @@ DEFAULT_CONFIG = {
     },
     'ExcludeItems': {
         'list': '',
+        'exclusion_line_keywords': '★,霰粒腫,術式未定,先天性鼻涙管閉塞開放術',
+        'surgery_strings_to_remove': '(クラレオントーリック),(クラレオンパンオプティクス),(クラレオンパンオプティクストーリック),(ビビティ),(ビビティトーリック),(アイハンストーリックⅡ),(トーリック),(inject)',
     },
     'Paths': {
         'surgery_search_data': '',
+        'processed_surgery_search_data': '',
         'surgery_schedule': '',
         'template_path': '',
         'output_path': '',
+    },
+    'Replacements': {
+        'anesthesia_replacements': '球後麻酔:局所,局所麻酔:局所,点眼麻酔:局所,全身麻酔:全身,結膜下:局所',
+        'surgeon_replacements': '橋本義弘:橋本,植田芳樹:植田,増子杏:増子,田中伸弥:田中,渡辺裕士:渡辺,鈴木貴文:鈴木',
+        'inpatient_replacements': 'あやめ:入院,わかば:入院,さくら:入院,外来:外来',
     },
 }
 
@@ -98,6 +106,7 @@ def get_dialog_settings(config: configparser.ConfigParser) -> dict:
 def get_paths(config: configparser.ConfigParser) -> dict:
     return {
         'surgery_search_data': config.get('Paths', 'surgery_search_data', fallback=''),
+        'processed_surgery_search_data': config.get('Paths', 'processed_surgery_search_data', fallback=''),
         'surgery_schedule': config.get('Paths', 'surgery_schedule', fallback=''),
         'template_path': config.get('Paths', 'template_path', fallback=''),
         'output_path': config.get('Paths', 'output_path', fallback=''),
@@ -107,3 +116,39 @@ def get_paths(config: configparser.ConfigParser) -> dict:
 def get_exclude_items(config: configparser.ConfigParser) -> list:
     items_str = config.get('ExcludeItems', 'list', fallback='')
     return [item.strip() for item in items_str.split(',') if item.strip()]
+
+
+def get_exclusion_line_keywords(config: configparser.ConfigParser) -> list:
+    keywords_str = config.get('ExcludeItems', 'exclusion_line_keywords', fallback='')
+    return [keyword.strip() for keyword in keywords_str.split(',') if keyword.strip()]
+
+
+def get_surgery_strings_to_remove(config: configparser.ConfigParser) -> list:
+    strings_str = config.get('ExcludeItems', 'surgery_strings_to_remove', fallback='')
+    return [string.strip() for string in strings_str.split(',') if string.strip()]
+
+
+def get_replacement_dict(config: configparser.ConfigParser, section: str, key: str) -> dict:
+    """
+    設定ファイルから置換用の辞書を取得
+
+    Args:
+        config: configparserオブジェクト
+        section: セクション名
+        key: キー名
+
+    Returns:
+        置換辞書
+    """
+    replacement_str = config.get(section, key, fallback='')
+    if not replacement_str:
+        return {}
+
+    replacement_dict = {}
+    for pair in replacement_str.split(','):
+        pair = pair.strip()
+        if ':' in pair:
+            source, target = pair.split(':', 1)
+            replacement_dict[source.strip()] = target.strip()
+
+    return replacement_dict

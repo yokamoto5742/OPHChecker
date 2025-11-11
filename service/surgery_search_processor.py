@@ -2,6 +2,14 @@ import unicodedata
 
 import pandas as pd
 
+from utils.config_manager import (
+    get_exclusion_line_keywords,
+    get_paths,
+    get_replacement_dict,
+    get_surgery_strings_to_remove,
+    load_config,
+)
+
 
 def process_eye_surgery_data(input_file_path: str, output_file_path: str) -> None:
     """
@@ -11,6 +19,8 @@ def process_eye_surgery_data(input_file_path: str, output_file_path: str) -> Non
         input_file_path: 入力ファイルのパス
         output_file_path: 出力ファイルのパス
     """
+    config = load_config()
+
     # CSVファイルを読み込み
     df = pd.read_csv(input_file_path, encoding='cp932')
 
@@ -34,60 +44,28 @@ def process_eye_surgery_data(input_file_path: str, output_file_path: str) -> Non
     df_processed['手術日'] = pd.to_datetime(df_processed['手術日'], format='%y/%m/%d').dt.strftime('%Y/%m/%d')
 
     # 麻酔の値を変換
-    anesthesia_replacements = {
-        '球後麻酔': '局所',
-        '局所麻酔': '局所',
-        '点眼麻酔': '局所',
-        '全身麻酔': '全身',
-        '結膜下': '局所',
-    }
+    anesthesia_replacements = get_replacement_dict(config, 'Replacements', 'anesthesia_replacements')
     df_processed['麻酔'] = df_processed['麻酔'].map(
         lambda x: anesthesia_replacements.get(x, x) if pd.notna(x) else x
     )
 
     # 術者を名字に変換
-    surgeon_replacements = {
-        '橋本義弘': '橋本',
-        '植田芳樹': '植田',
-        '増子杏': '増子',
-        '田中伸弥': '田中',
-        '渡辺裕士': '渡辺',
-        '鈴木貴文': '鈴木'
-    }
+    surgeon_replacements = get_replacement_dict(config, 'Replacements', 'surgeon_replacements')
     df_processed['医師'] = df_processed['医師'].replace(surgeon_replacements)
 
     # 入外の値を変換
-    inpatient_replacements = {
-        'あやめ': '入院',
-        'わかば': '入院',
-        'さくら': '入院',
-        '外来': '外来'
-    }
+    inpatient_replacements = get_replacement_dict(config, 'Replacements', 'inpatient_replacements')
     df_processed['入外'] = df_processed['入外'].map(
         lambda x: inpatient_replacements.get(x, x) if pd.notna(x) else x
     )
 
     # 手術列から特定の文字列を削除
-    surgery_strings_to_remove = [
-        '(クラレオントーリック)',
-        '(クラレオンパンオプティクス)',
-        '(クラレオンパンオプティクストーリック)',
-        '(ビビティ)',
-        '(ビビティトーリック)',
-        '(アイハンストーリックⅡ)',
-        '(トーリック)',
-        '(inject)',
-    ]
+    surgery_strings_to_remove = get_surgery_strings_to_remove(config)
     for string in surgery_strings_to_remove:
         df_processed['手術'] = df_processed['手術'].str.replace(string, '', regex=False)
 
     # 氏名列または手術列で特定の文字列が含まれている行を削除
-    exclusion_line_keywords = [
-        '★',
-        '霰粒腫',
-        '術式未定',
-        '先天性鼻涙管閉塞開放術'
-    ]
+    exclusion_line_keywords = get_exclusion_line_keywords(config)
 
     columns_to_filter = ['氏名','手術']
 
@@ -128,7 +106,10 @@ def process_eye_surgery_data(input_file_path: str, output_file_path: str) -> Non
     df_processed.to_csv(output_file_path, index=False, encoding='cp932')
 
 if __name__ == '__main__':
-    surgery_search_data = r'C:\Shinseikai\OPHChecker\input\眼科システム手術検索.csv'
-    processed_surgery_search_data = r'C:\Shinseikai\OPHChecker\processed_surgery_search.csv'
+    config = load_config()
+    paths = get_paths(config)
+
+    surgery_search_data = paths['surgery_search_data']
+    processed_surgery_search_data = paths['processed_surgery_search_data']
 
     process_eye_surgery_data(surgery_search_data, processed_surgery_search_data)
