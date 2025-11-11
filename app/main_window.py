@@ -36,12 +36,6 @@ class OPHCheckerGUI:
         self.root.grid_rowconfigure(2, weight=1)
         self.root.grid_columnconfigure(0, weight=1)
 
-        # Title
-        title_label = tk.Label(
-            self.root, text="眼科手術データ分析ツール", font=("Arial", self.font_size + 5, "bold")
-        )
-        title_label.grid(row=0, column=0, columnspan=2, pady=10)
-
         # Button frame
         button_frame = tk.Frame(self.root)
         button_frame.grid(row=1, column=0, columnspan=2, pady=10)
