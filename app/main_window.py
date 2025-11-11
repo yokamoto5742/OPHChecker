@@ -150,6 +150,10 @@ class OPHCheckerGUI:
             surgery_search_path = paths["surgery_search_data"]
             surgery_schedule_path = paths["surgery_schedule"]
             output_path = paths["output_path"]
+            processed_surgery_schedule = paths['processed_surgery_schedule']
+            processed_surgery_search_data =  paths['processed_surgery_search_data']
+            comparison_result = paths['comparison_result']
+            
 
             # Create output directory if not exists
             Path(output_path).mkdir(parents=True, exist_ok=True)
@@ -157,12 +161,11 @@ class OPHCheckerGUI:
             # Process 1: Surgery Schedule
             self._log_message("\n[1/3] 手術予定表の処理を開始...")
             self.status_var.set("手術予定表を処理中...")
-            schedule_output = str(Path(output_path) / "手術予定表.csv")
 
             try:
-                process_surgery_schedule(surgery_schedule_path, schedule_output)
+                process_surgery_schedule(surgery_schedule_path, processed_surgery_schedule)
                 self._log_message("✓ 手術予定表の処理が完了しました")
-                self._log_message(f"  出力: {schedule_output}")
+                self._log_message(f"  出力: {processed_surgery_schedule}")
             except Exception as e:
                 self._log_message(f"✗ エラー: {str(e)}")
                 raise
@@ -170,12 +173,11 @@ class OPHCheckerGUI:
             # Process 2: Eye Surgery Data
             self._log_message("\n[2/3] 眼科システムデータの処理を開始...")
             self.status_var.set("眼科システムデータを処理中...")
-            search_output = str(Path(output_path) / "眼科システム手術検索.csv")
 
             try:
-                process_eye_surgery_data(surgery_search_path, search_output)
+                process_eye_surgery_data(surgery_search_path, processed_surgery_search_data)
                 self._log_message("✓ 眼科システムデータの処理が完了しました")
-                self._log_message(f"  出力: {search_output}")
+                self._log_message(f"  出力: {processed_surgery_search_data}")
             except Exception as e:
                 self._log_message(f"✗ エラー: {str(e)}")
                 raise
@@ -183,12 +185,11 @@ class OPHCheckerGUI:
             # Process 3: Compare Surgery Data
             self._log_message("\n[3/3] データ比較を開始...")
             self.status_var.set("データを比較中...")
-            compare_output = str(Path(output_path) / "手術データ比較結果.csv")
 
             try:
-                compare_surgery_data(search_output, schedule_output, compare_output)
+                compare_surgery_data(processed_surgery_search_data, processed_surgery_schedule, comparison_result)
                 self._log_message("✓ データ比較が完了しました")
-                self._log_message(f"  出力: {compare_output}")
+                self._log_message(f"  出力: {comparison_result}")
             except Exception as e:
                 self._log_message(f"✗ エラー: {str(e)}")
                 raise
