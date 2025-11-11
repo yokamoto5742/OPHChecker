@@ -47,9 +47,12 @@ def process_surgery_schedule(surgery_schedule: str, processed_surgery_schedule: 
 
 
 if __name__ == '__main__':
-    # ファイルパスを指定
-    surgery_schedule = r'C:\Shinseikai\OPHChecker\input\手術予定表.xls'
-    processed_surgery_schedule = r'C:\Shinseikai\OPHChecker\processed_surgery_schedule.csv'
+    from utils.config_manager import load_config, get_paths
 
-    # 処理を実行
-    process_surgery_schedule(surgery_schedule, processed_surgery_schedule)
+    config = load_config()
+    paths = get_paths(config)
+
+    process_surgery_schedule(
+        paths['surgery_schedule'],
+        paths['processed_surgery_schedule']
+    )

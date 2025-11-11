@@ -13,6 +13,8 @@
 - 手術予定表処理で術式列を全角カナに変換する機能を追加
 
 ### 変更
+- surgery_schedule_processor.py: ハードコードされたファイルパスをconfig.iniから読み込むように変更
+- config_manager.py: processed_surgery_scheduleパスキーを追加
 
 ### 修正
 
