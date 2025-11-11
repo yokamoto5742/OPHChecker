@@ -27,6 +27,11 @@ def surgery_error_extractor(comparison_result: str, output_path: str) -> str:
 
     df_errors = df[mask]
 
+    # エラーがない場合は処理を終了
+    if len(df_errors) == 0:
+        print("不一致および未入力はありませんでした")
+        return ""
+
     # 出力する列を選択
     output_columns = ['手術日', '患者ID', '氏名', '入外', '術眼', '手術', '医師', '麻酔', '術前','入外_比較', '術眼_比較', '手術_比較', '医師_比較', '麻酔_比較']
     df_output = df_errors[output_columns]
