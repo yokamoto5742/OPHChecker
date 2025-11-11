@@ -6,7 +6,6 @@ from pathlib import Path
 from tkinter import messagebox, scrolledtext
 
 from app import __version__
-from app.exclude_items_dialog import ExcludeItemsDialog
 from service.surgery_comparator import compare_surgery_data
 from service.surgery_error_extractor import surgery_error_extractor
 from service.surgery_schedule_processor import process_surgery_schedule
@@ -22,7 +21,7 @@ from utils.config_manager import (
     save_exclusion_line_keywords,
     save_surgery_strings_to_remove,
 )
-
+from widgets.exclude_items_dialog import ExcludeItemsDialog
 
 class OPHCheckerGUI:
     def __init__(self, root: tk.Tk) -> None:
