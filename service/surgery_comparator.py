@@ -2,21 +2,21 @@ import pandas as pd
 
 
 def compare_surgery_data(
-        search_csv_path: str,
-        schedule_csv_path: str,
-        output_csv_path: str
+        processed_surgery_search_data: str,
+        processed_surgery_schedule: str,
+        comparison_result: str
 ) -> None:
     """
     手術検索データと手術予定表を比較してCSV形式で出力する
 
     Args:
-        search_csv_path: 手術検索データのCSVファイルパス（基準データ）
-        schedule_csv_path: 手術予定表のCSVファイルパス（比較対象データ）
-        output_csv_path: 比較結果を出力するCSVファイルパス
+        processed_surgery_search_data: 手術検索データのCSVファイルパス（基準データ）
+        processed_surgery_schedule: 手術予定表のCSVファイルパス（比較対象データ）
+        comparison_result: 比較結果を出力するCSVファイルパス
     """
     # CSVファイルを読み込み
-    df_search = pd.read_csv(search_csv_path, encoding='cp932')
-    df_schedule = pd.read_csv(schedule_csv_path, encoding='cp932')
+    df_search = pd.read_csv(processed_surgery_search_data, encoding='cp932')
+    df_schedule = pd.read_csv(processed_surgery_schedule, encoding='cp932')
 
     print(f"検索データ件数: {len(df_search)}件")
     print(f"予定表データ件数（読み込み時）: {len(df_schedule)}件")
@@ -123,7 +123,7 @@ def compare_surgery_data(
     ]
 
     # CSVファイルとして保存
-    df_output.to_csv(output_csv_path, index=False, encoding='cp932')
+    df_output.to_csv(comparison_result, index=False, encoding='cp932')
 
     # 統計情報を表示
     total_rows = len(df_output)
@@ -138,14 +138,14 @@ def compare_surgery_data(
 
     print(f"\n処理が完了しました。")
     print(f"総件数: {total_rows}件")
-    print(f"出力ファイル: {output_csv_path}")
+    print(f"出力ファイル: {comparison_result}")
 
 
 if __name__ == '__main__':
     # ファイルパスを指定
-    search_csv_path = r'C:\Shinseikai\OPHChecker\processed_surgery_search.csv'
-    schedule_csv_path = r'C:\Shinseikai\OPHChecker\processed_surgery_schedule.csv'
-    output_csv_path = r'C:\Shinseikai\OPHChecker\comparison_result.csv'
+    processed_surgery_search_data = r'C:\Shinseikai\OPHChecker\processed\processed_surgery_search.csv'
+    processed_surgery_schedule = r'C:\Shinseikai\OPHChecker\processed\processed_surgery_schedule.csv'
+    comparison_result = r'C:\Shinseikai\OPHChecker\processed\comparison_result.csv'
 
     # 比較処理を実行
-    compare_surgery_data(search_csv_path, schedule_csv_path, output_csv_path)
+    compare_surgery_data(processed_surgery_search_data, processed_surgery_schedule, comparison_result)
