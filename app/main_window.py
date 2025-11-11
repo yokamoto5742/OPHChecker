@@ -5,6 +5,7 @@ import tkinter as tk
 from pathlib import Path
 from tkinter import messagebox, scrolledtext
 
+from app import __version__
 from service.surgery_comparator import compare_surgery_data
 from service.surgery_schedule_processor import process_surgery_schedule
 from service.surgery_search_processor import process_eye_surgery_data
@@ -19,7 +20,7 @@ from utils.config_manager import (
 class OPHCheckerGUI:
     def __init__(self, root: tk.Tk) -> None:
         self.root = root
-        self.root.title("OPHChecker")
+        self.root.title(f"OPHChecker v{__version__}")
         self.config = load_config()
         self._apply_appearance_settings()
         self._setup_ui()
