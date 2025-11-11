@@ -42,15 +42,19 @@ class OPHCheckerGUI:
         self.font_size = appearance['font_size']
 
     def _setup_ui(self) -> None:
-        self.root.grid_rowconfigure(2, weight=1)
+        self.root.grid_rowconfigure(4, weight=1)
         self.root.grid_columnconfigure(0, weight=1)
 
-        # Button frame
-        button_frame = tk.Frame(self.root)
-        button_frame.grid(row=1, column=0, columnspan=2, pady=10)
+        # Button frames (2 rows)
+        button_frame_row1 = tk.Frame(self.root)
+        button_frame_row1.grid(row=1, column=0, columnspan=2, pady=(10, 5), sticky="w", padx=10)
 
+        button_frame_row2 = tk.Frame(self.root)
+        button_frame_row2.grid(row=2, column=0, columnspan=2, pady=(5, 10), sticky="w", padx=10)
+
+        # Row 1 buttons
         self.start_button = tk.Button(
-            button_frame,
+            button_frame_row1,
             text="分析開始",
             command=self._start_analysis,
             font=("Arial", self.font_size + 1),
@@ -62,21 +66,8 @@ class OPHCheckerGUI:
         )
         self.start_button.pack(side=tk.LEFT, padx=5)
 
-        self.settings_button = tk.Button(
-            button_frame,
-            text="設定",
-            command=self._open_settings,
-            font=("Arial", self.font_size + 1),
-            bg="#2196F3",
-            fg="white",
-            padx=20,
-            pady=10,
-            width=15,
-        )
-        self.settings_button.pack(side=tk.LEFT, padx=5)
-
         self.exclude_items_button = tk.Button(
-            button_frame,
+            button_frame_row1,
             text="除外項目編集",
             command=self._open_exclude_items,
             font=("Arial", self.font_size + 1),
@@ -89,7 +80,7 @@ class OPHCheckerGUI:
         self.exclude_items_button.pack(side=tk.LEFT, padx=5)
 
         self.replacements_button = tk.Button(
-            button_frame,
+            button_frame_row1,
             text="置換設定編集",
             command=self._open_replacements,
             font=("Arial", self.font_size + 1),
@@ -101,8 +92,9 @@ class OPHCheckerGUI:
         )
         self.replacements_button.pack(side=tk.LEFT, padx=5)
 
+        # Row 2 buttons
         self.copy_input_path_button = tk.Button(
-            button_frame,
+            button_frame_row2,
             text="入力フォルダパスコピー",
             command=self._copy_input_path_to_clipboard,
             font=("Arial", self.font_size + 1),
@@ -115,7 +107,7 @@ class OPHCheckerGUI:
         self.copy_input_path_button.pack(side=tk.LEFT, padx=5)
 
         self.close_button = tk.Button(
-            button_frame,
+            button_frame_row2,
             text="閉じる",
             command=self._close_application,
             font=("Arial", self.font_size + 1),
@@ -129,13 +121,13 @@ class OPHCheckerGUI:
 
         # Status/Log display
         log_label = tk.Label(self.root, text="実行ログ:", font=("Arial", self.font_size - 1))
-        log_label.grid(row=2, column=0, columnspan=2, sticky="nw", padx=10, pady=(5, 0))
+        log_label.grid(row=3, column=0, columnspan=2, sticky="nw", padx=10, pady=(5, 0))
 
         self.log_text = scrolledtext.ScrolledText(
             self.root, height=15, width=70, font=("Courier", self.font_size - 2)
         )
-        self.log_text.grid(row=3, column=0, columnspan=2, padx=10, pady=10, sticky="nsew")
-        self.root.grid_rowconfigure(3, weight=1)
+        self.log_text.grid(row=4, column=0, columnspan=2, padx=10, pady=10, sticky="nsew")
+        self.root.grid_rowconfigure(4, weight=1)
 
         # Status bar
         self.status_var = tk.StringVar(value="準備完了")
@@ -146,7 +138,7 @@ class OPHCheckerGUI:
             anchor="w",
             font=("Arial", self.font_size - 2),
         )
-        status_bar.grid(row=4, column=0, columnspan=2, sticky="ew", padx=5, pady=5)
+        status_bar.grid(row=5, column=0, columnspan=2, sticky="ew", padx=5, pady=5)
 
     def _log_message(self, message: str) -> None:
         self.log_text.insert(tk.END, message + "\n")
@@ -158,7 +150,6 @@ class OPHCheckerGUI:
             return
 
         self.start_button.config(state=tk.DISABLED)
-        self.settings_button.config(state=tk.DISABLED)
         self.log_text.delete("1.0", tk.END)
         self.status_var.set("分析中...")
 
@@ -274,7 +265,6 @@ class OPHCheckerGUI:
 
         finally:
             self.start_button.config(state=tk.NORMAL)
-            self.settings_button.config(state=tk.NORMAL)
 
     def _open_output_folder(self, output_path: str) -> None:
         try:
