@@ -102,6 +102,9 @@ def process_eye_surgery_data(input_file_path: str, output_file_path: str) -> Non
     column_order = ['手術日', '患者ID', '氏名', '入外', '術眼', '手術', '医師', '麻酔', '術前']
     df_processed = df_processed[column_order]
 
+    # 手術日と患者IDで昇順にソート
+    df_processed = df_processed.sort_values(by=['手術日', '患者ID'])
+
     # CSVファイルに保存
     df_processed.to_csv(output_file_path, index=False, encoding='cp932')
 

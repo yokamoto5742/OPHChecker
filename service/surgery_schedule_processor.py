@@ -40,6 +40,9 @@ def process_surgery_schedule(surgery_schedule: str, processed_surgery_schedule: 
     # 列の順番を並び替え
     df_processed = df_processed[['手術日', '患者ID', '氏名', '入外', '術眼', '手術', '医師', '麻酔']]
 
+    # 手術日と患者IDで昇順にソート
+    df_processed = df_processed.sort_values(by=['手術日', '患者ID'])
+
     # CSVファイルとして保存
     df_processed.to_csv(processed_surgery_schedule, index=False, encoding='cp932')
 
