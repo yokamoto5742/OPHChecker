@@ -11,7 +11,7 @@ class ReplacementsDialog:
         self.font_size = font_size
 
         self.dialog = tk.Toplevel(parent)
-        self.dialog.title("置換設定編集")
+        self.dialog.title("置換設定")
         self.dialog.transient(parent)
         self.dialog.grab_set()
 

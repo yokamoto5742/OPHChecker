@@ -68,7 +68,7 @@ class OPHCheckerGUI:
 
         self.exclude_items_button = tk.Button(
             button_frame_row1,
-            text="除外項目編集",
+            text="除外設定",
             command=self._open_exclude_items,
             font=("Arial", self.font_size + 1),
             bg="#9C27B0",
@@ -81,7 +81,7 @@ class OPHCheckerGUI:
 
         self.replacements_button = tk.Button(
             button_frame_row1,
-            text="置換設定編集",
+            text="置換設定",
             command=self._open_replacements,
             font=("Arial", self.font_size + 1),
             bg="#00BCD4",
@@ -95,7 +95,7 @@ class OPHCheckerGUI:
         # Row 2 buttons
         self.copy_input_path_button = tk.Button(
             button_frame_row2,
-            text="入力フォルダパスコピー",
+            text="入力パスコピー",
             command=self._copy_input_path_to_clipboard,
             font=("Arial", self.font_size + 1),
             bg="#FF9800",
@@ -369,19 +369,18 @@ class OPHCheckerGUI:
         input_path = paths.get("input_path", "")
 
         if not input_path:
-            self._log_message("✗ 入力フォルダパスが設定されていません")
-            messagebox.showwarning("警告", "入力フォルダパスが設定されていません")
+            self._log_message("✗ 入力パスが設定されていません")
+            messagebox.showwarning("警告", "入力パスが設定されていません")
             return
 
         try:
             self.root.clipboard_clear()
             self.root.clipboard_append(input_path)
             self.root.update()
-            self._log_message(f"✓ 入力フォルダパスをクリップボードにコピーしました: {input_path}")
-            self.status_var.set("入力フォルダパスをコピーしました")
+            self._log_message(f"✓ 入力パスをクリップボードにコピーしました: {input_path}")
+            self.status_var.set("入力パスをコピーしました")
 
-            # 3秒後に自動的に消えるダイアログを表示
-            self._show_auto_close_message("コピー完了", f"入力フォルダパスをクリップボードにコピーしました:\n\n{input_path}", 3000)
+            self._show_auto_close_message("コピー完了", f"入力パスをクリップボードにコピーしました:\n\n{input_path}", 2000)
         except Exception as e:
             self._log_message(f"✗ エラー: クリップボードへのコピーに失敗しました: {str(e)}")
             messagebox.showerror("エラー", f"クリップボードへのコピーに失敗しました:\n\n{str(e)}")

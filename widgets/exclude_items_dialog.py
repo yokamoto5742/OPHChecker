@@ -9,7 +9,7 @@ class ExcludeItemsDialog:
         self.font_size = font_size
 
         self.dialog = tk.Toplevel(parent)
-        self.dialog.title("除外項目編集")
+        self.dialog.title("除外設定")
         self.dialog.transient(parent)
         self.dialog.grab_set()
 
