@@ -7,11 +7,11 @@ def compare_surgery_data(
         comparison_result: str
 ) -> None:
     """
-    手術検索データと手術予定表を比較してCSV形式で出力する
+    手術検索データと手術予定表を比較してCSV形式で出力
 
     Args:
-        processed_surgery_search_data: 手術検索データのCSVファイルパス（基準データ）
-        processed_surgery_schedule: 手術予定表のCSVファイルパス（比較対象データ）
+        processed_surgery_search_data: 手術検索データのCSVファイルパス（基準）
+        processed_surgery_schedule: 手術予定表のCSVファイルパス（比較対象）
         comparison_result: 比較結果を出力するCSVファイルパス
     """
     # CSVファイルを読み込み
@@ -42,8 +42,7 @@ def compare_surgery_data(
     if len(df_schedule) > 0:
         df_schedule['手術日'] = pd.to_datetime(df_schedule['手術日']).dt.strftime('%Y/%m/%d')
 
-    # 患者IDを文字列型に統一し、前後の空白を削除
-    # 浮動小数点型の場合は整数に変換してから文字列化（1469.0 → 1469 → "1469"）
+    # 患者IDを文字列型に統一し前後の空白を削除、浮動小数点型の場合は整数に変換してから文字列
     df_search['患者ID'] = df_search['患者ID'].astype(float).astype(int).astype(str).str.strip()
     if len(df_schedule) > 0:
         df_schedule['患者ID'] = df_schedule['患者ID'].astype(float).astype(int).astype(str).str.strip()

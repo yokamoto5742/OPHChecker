@@ -1,9 +1,10 @@
 import os
-import sys
 import threading
 import tkinter as tk
 from pathlib import Path
 from tkinter import messagebox, scrolledtext
+
+import pandas as pd
 
 from app import __version__
 from service.surgery_comparator import compare_surgery_data
@@ -12,7 +13,6 @@ from service.surgery_schedule_processor import process_surgery_schedule
 from service.surgery_search_processor import process_eye_surgery_data
 from utils.config_manager import (
     get_appearance_settings,
-    get_config_path,
     get_exclusion_line_keywords,
     get_paths,
     get_replacement_dict,
@@ -25,6 +25,7 @@ from utils.config_manager import (
 )
 from widgets.exclude_items_dialog import ExcludeItemsDialog
 from widgets.replacements_dialog import ReplacementsDialog
+
 
 class OPHCheckerGUI:
     def __init__(self, root: tk.Tk) -> None:
@@ -113,7 +114,7 @@ class OPHCheckerGUI:
         )
         self.close_button.pack(side=tk.LEFT, padx=5)
 
-        log_label = tk.Label(self.root, text="実行ログ:", font=("Arial", self.font_size))
+        log_label = tk.Label(self.root, text="実行ログ:", font=("Arial", self.font_size - 1))
         log_label.grid(row=3, column=0, columnspan=2, sticky="nw", padx=10, pady=(5, 0))
 
         self.log_text = scrolledtext.ScrolledText(
@@ -128,7 +129,7 @@ class OPHCheckerGUI:
             textvariable=self.status_var,
             relief=tk.SUNKEN,
             anchor="w",
-            font=("Arial", self.font_size),
+            font=("Arial", self.font_size - 2),
         )
         status_bar.grid(row=5, column=0, columnspan=2, sticky="ew", padx=5, pady=5)
 
@@ -195,11 +196,11 @@ class OPHCheckerGUI:
                 self._log_message(f"✗ エラー: {str(e)}")
                 raise
 
-            self._log_message("\n[2/4] 眼科システム検索データの処理を開始...")
+            self._log_message("\n[2/4] 手術検索データの処理を開始...")
 
             try:
                 process_eye_surgery_data(surgery_search_path, processed_surgery_search_data)
-                self._log_message("✓ 眼科システム検索データの処理が完了しました")
+                self._log_message("✓ 手術検索データの処理が完了しました")
             except Exception as e:
                 self._log_message(f"✗ エラー: {str(e)}")
                 raise
@@ -225,6 +226,9 @@ class OPHCheckerGUI:
                 self._log_message(f"✗ エラー: {str(e)}")
                 raise
 
+            df_search = pd.read_csv(processed_surgery_search_data, encoding='cp932')
+            self._log_message(f"\n対象期間: {df_search['手術日'].min()} ～ {df_search['手術日'].max()}")
+
             self.status_var.set("処理完了")
             self._open_output_folder(output_path)
 
@@ -241,7 +245,6 @@ class OPHCheckerGUI:
     def _open_output_folder(self, output_path: str) -> None:
         try:
             os.startfile(output_path)
-            self._log_message(f"出力フォルダを開きました: {output_path}")
         except Exception as e:
             self._log_message(f"✗ エラー: 出力フォルダを開けません: {str(e)}")
             messagebox.showerror(
