@@ -47,9 +47,6 @@ def compare_surgery_data(
     if len(df_schedule) > 0:
         df_schedule['患者ID'] = df_schedule['患者ID'].astype(float).astype(int).astype(str).str.strip()
 
-    # デバッグ: マージ前の手術日と患者IDの範囲を表示
-    print(f"\n検索データの手術日範囲: {df_search['手術日'].min()} ～ {df_search['手術日'].max()}")
-
     if len(df_schedule) > 0:
         # NaN（欠損値）を除外してmin/maxを取得
         valid_dates = df_schedule['手術日'].dropna()
@@ -58,19 +55,12 @@ def compare_surgery_data(
         else:
             print("予定表に有効な手術日がありません。")
 
-        print(f"\n検索データのサンプル（最初の3件）:")
-        print(df_search[['手術日', '患者ID', '氏名']].head(3))
-        print(f"\n予定表のサンプル（最初の3件）:")
-        print(df_schedule[['手術日', '患者ID', '氏名']].head(3))
-
         # NaNが含まれている場合は警告を表示
         nan_count = df_schedule['手術日'].isna().sum()
         if nan_count > 0:
             print(f"\n警告: 予定表に手術日が空の行が {nan_count}件 あります。")
     else:
         print("予定表にデータがありません。")
-        print(f"\n検索データのサンプル（最初の3件）:")
-        print(df_search[['手術日', '患者ID', '氏名']].head(3))
 
     # 手術日と患者IDをキーとして左結合（left join）
     df_merged = df_search.merge(
@@ -83,7 +73,7 @@ def compare_surgery_data(
     # 比較対象の列名
     compare_columns = ['入外', '術眼', '手術', '医師', '麻酔']
 
-    # 手術日の比較列を追加（常にTrueになるはずだが、念のため）
+    # 手術日の比較列を追加（常にTrue）
     df_merged['手術日_比較'] = True
 
     # 各列の比較結果を格納
@@ -100,7 +90,7 @@ def compare_surgery_data(
         )
 
     # 出力用のデータフレームを作成
-    # 最初の9列：検索データの元データ
+    # 手術検索データ
     output_columns = [
         '手術日', '患者ID', '氏名_検索', '入外_検索', '術眼_検索',
         '手術_検索', '医師_検索', '麻酔_検索', '術前'
@@ -146,7 +136,6 @@ if __name__ == '__main__':
     config = load_config()
     paths = get_paths(config)
 
-    # 比較処理を実行
     compare_surgery_data(
         paths['processed_surgery_search_data'],
         paths['processed_surgery_schedule'],
