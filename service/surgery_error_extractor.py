@@ -49,11 +49,7 @@ def surgery_error_extractor(comparison_result: str, output_path: str) -> str:
     wb = load_workbook(template_path)
     ws = wb.active
 
-    # ヘッダー行を書き込み
-    for col_idx, column_name in enumerate(df_output.columns, start=1):
-        ws.cell(row=1, column=col_idx, value=column_name)
-
-    # データ行を書き込み
+    # データ行を書き込み(ヘッダー行はテンプレート側で指定)
     for row_idx, row_data in enumerate(df_output.values, start=2):
         for col_idx, value in enumerate(row_data, start=1):
             ws.cell(row=row_idx, column=col_idx, value=value)
