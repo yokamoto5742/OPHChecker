@@ -382,7 +382,7 @@ class OPHCheckerGUI:
             self._log_message(f"✗ エラー: クリップボードへのコピーに失敗しました: {str(e)}")
             messagebox.showerror("エラー", f"クリップボードへのコピーに失敗しました:\n\n{str(e)}")
 
-    def _show_auto_close_message(self, title: str, message: str, duration_ms: int = 3000) -> None:
+    def _show_auto_close_message(self, title: str, message: str, duration_ms: int = 2000) -> None:
         """3秒後に自動的に閉じるメッセージダイアログを表示"""
         dialog = tk.Toplevel(self.root)
         dialog.title(title)
