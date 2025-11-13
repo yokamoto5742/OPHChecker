@@ -13,7 +13,7 @@ from utils.config_manager import (
 
 def process_eye_surgery_data(input_file_path: str, output_file_path: str) -> None:
     """
-    眼科システム手術検索のCSVファイルを処理
+    手術検索データのCSVファイルを処理
 
     Args:
         input_file_path: 入力ファイルのパス

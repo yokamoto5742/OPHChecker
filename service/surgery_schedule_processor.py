@@ -5,7 +5,7 @@ import pandas as pd
 
 def process_surgery_schedule(surgery_schedule: str, processed_surgery_schedule: str, sheet_name: str = '南館2') -> None:
     """
-    手術予定表を処理してCSV形式で出力する
+    手術予定表を処理してCSV形式で出力
 
     Args:
         surgery_schedule: 入力Excelファイルのパス
