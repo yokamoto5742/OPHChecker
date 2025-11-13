@@ -40,6 +40,7 @@ class OPHCheckerGUI:
         window_height = appearance['window_height']
         self.root.geometry(f"{window_width}x{window_height}")
         self.font_size = appearance['font_size']
+        self.log_font_size = appearance['log_font_size']
 
     def _setup_ui(self) -> None:
         self.root.grid_rowconfigure(4, weight=1)
@@ -120,7 +121,7 @@ class OPHCheckerGUI:
         log_label.grid(row=3, column=0, columnspan=2, sticky="nw", padx=10, pady=(5, 0))
 
         self.log_text = scrolledtext.ScrolledText(
-            self.root, height=15, width=70, font=("Courier", self.font_size - 2)
+            self.root, height=15, width=70, font=("Courier", self.log_font_size)
         )
         self.log_text.grid(row=4, column=0, columnspan=2, padx=10, pady=10, sticky="nsew")
         self.root.grid_rowconfigure(4, weight=1)

@@ -93,6 +93,7 @@ def _ensure_default_sections(config: configparser.ConfigParser) -> None:
 def get_appearance_settings(config: configparser.ConfigParser) -> dict:
     return {
         'font_size': config.getint('Appearance', 'font_size', fallback=11),
+        'log_font_size': config.getint('Appearance', 'log_font_size', fallback=9),
         'window_width': config.getint('Appearance', 'window_width', fallback=350),
         'window_height': config.getint('Appearance', 'window_height', fallback=350),
     }
