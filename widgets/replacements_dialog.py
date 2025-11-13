@@ -27,22 +27,18 @@ class ReplacementsDialog:
         notebook = ttk.Notebook(self.dialog)
         notebook.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
 
-        # タブ1: 麻酔方法置換
         anesthesia_frame = tk.Frame(notebook)
-        notebook.add(anesthesia_frame, text="麻酔方法置換")
+        notebook.add(anesthesia_frame, text="麻酔")
         self._setup_replacements_tab(anesthesia_frame, self.anesthesia_replacements, "anesthesia")
 
-        # タブ2: 執刀医置換
         surgeon_frame = tk.Frame(notebook)
-        notebook.add(surgeon_frame, text="執刀医置換")
+        notebook.add(surgeon_frame, text="医師")
         self._setup_replacements_tab(surgeon_frame, self.surgeon_replacements, "surgeon")
 
-        # タブ3: 入院区分置換
         inpatient_frame = tk.Frame(notebook)
-        notebook.add(inpatient_frame, text="入院区分置換")
+        notebook.add(inpatient_frame, text="入外")
         self._setup_replacements_tab(inpatient_frame, self.inpatient_replacements, "inpatient")
 
-        # ボタンフレーム
         button_frame = tk.Frame(self.dialog)
         button_frame.pack(fill=tk.X, padx=10, pady=10)
 
@@ -76,7 +72,7 @@ class ReplacementsDialog:
         # 説明ラベル
         description = tk.Label(
             parent,
-            text="置換前の値 → 置換後の値",
+            text="置換前 → 置換後",
             font=("Arial", self.font_size - 1),
             anchor="w",
         )
@@ -110,7 +106,6 @@ class ReplacementsDialog:
         elif tab_type == "inpatient":
             self.inpatient_listbox = listbox
 
-        # ボタンフレーム
         btn_frame = tk.Frame(parent)
         btn_frame.pack(fill=tk.X, padx=10, pady=5)
 
@@ -148,7 +143,7 @@ class ReplacementsDialog:
         dialog.grab_set()
 
         # 置換前
-        label1 = tk.Label(dialog, text="置換前の値:", font=("Arial", self.font_size))
+        label1 = tk.Label(dialog, text="置換前:", font=("Arial", self.font_size))
         label1.pack(padx=20, pady=(20, 5))
 
         entry_key = tk.Entry(dialog, font=("Arial", self.font_size), width=40)
@@ -156,7 +151,7 @@ class ReplacementsDialog:
         entry_key.focus_set()
 
         # 置換後
-        label2 = tk.Label(dialog, text="置換後の値:", font=("Arial", self.font_size))
+        label2 = tk.Label(dialog, text="置換後:", font=("Arial", self.font_size))
         label2.pack(padx=20, pady=(10, 5))
 
         entry_value = tk.Entry(dialog, font=("Arial", self.font_size), width=40)
@@ -167,7 +162,7 @@ class ReplacementsDialog:
             value = entry_value.get().strip()
             if key and value:
                 if key in replacements_dict:
-                    messagebox.showwarning("警告", "同じ置換前の値が既に存在します", parent=dialog)
+                    messagebox.showwarning("警告", "同じ値が既に存在します", parent=dialog)
                     return
                 replacements_dict[key] = value
                 listbox.insert(tk.END, f"{key} → {value}")
@@ -217,7 +212,7 @@ class ReplacementsDialog:
         dialog.grab_set()
 
         # 置換前
-        label1 = tk.Label(dialog, text="置換前の値:", font=("Arial", self.font_size))
+        label1 = tk.Label(dialog, text="置換前:", font=("Arial", self.font_size))
         label1.pack(padx=20, pady=(20, 5))
 
         entry_key = tk.Entry(dialog, font=("Arial", self.font_size), width=40)
@@ -227,7 +222,7 @@ class ReplacementsDialog:
         entry_key.select_range(0, tk.END)
 
         # 置換後
-        label2 = tk.Label(dialog, text="置換後の値:", font=("Arial", self.font_size))
+        label2 = tk.Label(dialog, text="置換後:", font=("Arial", self.font_size))
         label2.pack(padx=20, pady=(10, 5))
 
         entry_value = tk.Entry(dialog, font=("Arial", self.font_size), width=40)
@@ -240,7 +235,7 @@ class ReplacementsDialog:
             if new_key and new_value:
                 # キーが変更された場合、既存のキーとの重複をチェック
                 if new_key != current_key and new_key in replacements_dict:
-                    messagebox.showwarning("警告", "同じ置換前の値が既に存在します", parent=dialog)
+                    messagebox.showwarning("警告", "同じ値が既に存在します", parent=dialog)
                     return
 
                 # 古いキーを削除
