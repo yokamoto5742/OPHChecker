@@ -46,14 +46,12 @@ class OPHCheckerGUI:
         self.root.grid_rowconfigure(4, weight=1)
         self.root.grid_columnconfigure(0, weight=1)
 
-        # Button frames (2 rows)
         button_frame_row1 = tk.Frame(self.root)
         button_frame_row1.grid(row=1, column=0, columnspan=2, pady=(10, 5), sticky="w", padx=10)
 
         button_frame_row2 = tk.Frame(self.root)
         button_frame_row2.grid(row=2, column=0, columnspan=2, pady=(5, 10), sticky="w", padx=10)
 
-        # Row 1 buttons
         self.start_button = tk.Button(
             button_frame_row1,
             text="分析開始",
@@ -91,7 +89,6 @@ class OPHCheckerGUI:
         )
         self.replacements_button.pack(side=tk.LEFT, padx=5)
 
-        # Row 2 buttons
         self.copy_input_path_button = tk.Button(
             button_frame_row2,
             text="入力パスコピー",
@@ -116,8 +113,7 @@ class OPHCheckerGUI:
         )
         self.close_button.pack(side=tk.LEFT, padx=5)
 
-        # Status/Log display
-        log_label = tk.Label(self.root, text="実行ログ:", font=("Arial", self.font_size - 1))
+        log_label = tk.Label(self.root, text="実行ログ:", font=("Arial", self.font_size))
         log_label.grid(row=3, column=0, columnspan=2, sticky="nw", padx=10, pady=(5, 0))
 
         self.log_text = scrolledtext.ScrolledText(
@@ -126,14 +122,13 @@ class OPHCheckerGUI:
         self.log_text.grid(row=4, column=0, columnspan=2, padx=10, pady=10, sticky="nsew")
         self.root.grid_rowconfigure(4, weight=1)
 
-        # Status bar
         self.status_var = tk.StringVar(value="準備完了")
         status_bar = tk.Label(
             self.root,
             textvariable=self.status_var,
             relief=tk.SUNKEN,
             anchor="w",
-            font=("Arial", self.font_size - 2),
+            font=("Arial", self.font_size),
         )
         status_bar.grid(row=5, column=0, columnspan=2, sticky="ew", padx=5, pady=5)
 
@@ -148,7 +143,7 @@ class OPHCheckerGUI:
 
         self.start_button.config(state=tk.DISABLED)
         self.log_text.delete("1.0", tk.END)
-        self.status_var.set("分析中...")
+        self.status_var.set("処理中...")
 
         thread = threading.Thread(target=self._run_analysis, daemon=True)
         thread.start()
@@ -181,7 +176,6 @@ class OPHCheckerGUI:
             self._log_message("分析処理を開始します")
             self._log_message("=" * 60)
 
-            # Get paths from config
             paths = get_paths(self.config)
             surgery_search_path = paths["surgery_search_data"]
             surgery_schedule_path = paths["surgery_schedule"]
@@ -190,67 +184,48 @@ class OPHCheckerGUI:
             processed_surgery_search_data = paths['processed_surgery_search_data']
             comparison_result = paths['comparison_result']
 
-            # Create output directory if not exists
             Path(output_path).mkdir(parents=True, exist_ok=True)
 
-            # Process 1: Surgery Schedule
             self._log_message("\n[1/4] 手術予定表の処理を開始...")
-            self.status_var.set("手術予定表を処理中...")
 
             try:
                 process_surgery_schedule(surgery_schedule_path, processed_surgery_schedule)
                 self._log_message("✓ 手術予定表の処理が完了しました")
-                self._log_message(f"  出力: {processed_surgery_schedule}")
             except Exception as e:
                 self._log_message(f"✗ エラー: {str(e)}")
                 raise
 
-            # Process 2: Eye Surgery Data
-            self._log_message("\n[2/4] 眼科システムデータの処理を開始...")
-            self.status_var.set("眼科システムデータを処理中...")
+            self._log_message("\n[2/4] 眼科システム検索データの処理を開始...")
 
             try:
                 process_eye_surgery_data(surgery_search_path, processed_surgery_search_data)
-                self._log_message("✓ 眼科システムデータの処理が完了しました")
-                self._log_message(f"  出力: {processed_surgery_search_data}")
+                self._log_message("✓ 眼科システム検索データの処理が完了しました")
             except Exception as e:
                 self._log_message(f"✗ エラー: {str(e)}")
                 raise
 
-            # Process 3: Compare Surgery Data
             self._log_message("\n[3/4] データ比較を開始...")
-            self.status_var.set("データを比較中...")
 
             try:
                 compare_surgery_data(processed_surgery_search_data, processed_surgery_schedule, comparison_result)
                 self._log_message("✓ データ比較が完了しました")
-                self._log_message(f"  出力: {comparison_result}")
             except Exception as e:
                 self._log_message(f"✗ エラー: {str(e)}")
                 raise
 
-            # Process 4: Generate Surgery Instruction
-            self._log_message("\n[4/4] 手術指示確認書の生成を開始...")
-            self.status_var.set("手術指示確認書を生成中...")
+            self._log_message("\n[4/4] 眼科手術指示確認ファイルを作成開始...")
 
             try:
                 instruction_file = surgery_error_extractor(comparison_result, output_path)
                 if instruction_file:
-                    self._log_message("✓ 手術指示確認書の生成が完了しました")
-                    self._log_message(f"  出力: {instruction_file}")
+                    self._log_message("✓ 眼科手術指示確認ファイルを作成しました")
                 else:
-                    self._log_message("✓ 不一致および未入力はありませんでした")
+                    self._log_message("✓ 不一致および未入力データはありませんでした")
             except Exception as e:
                 self._log_message(f"✗ エラー: {str(e)}")
                 raise
 
-            # Success
-            self._log_message("\n" + "=" * 60)
-            self._log_message("✓ 全ての処理が正常に完了しました")
-            self._log_message("=" * 60)
             self.status_var.set("処理完了")
-
-            # Open output folder
             self._open_output_folder(output_path)
 
         except Exception as e:
@@ -265,42 +240,13 @@ class OPHCheckerGUI:
 
     def _open_output_folder(self, output_path: str) -> None:
         try:
-            if sys.platform == "win32":
-                os.startfile(output_path)
-            elif sys.platform == "darwin":
-                os.system(f"open '{output_path}'")
-            else:
-                os.system(f"xdg-open '{output_path}'")
-
+            os.startfile(output_path)
             self._log_message(f"出力フォルダを開きました: {output_path}")
         except Exception as e:
             self._log_message(f"✗ エラー: 出力フォルダを開けません: {str(e)}")
             messagebox.showerror(
                 "エラー",
                 f"出力フォルダを開けません:\n\n{str(e)}",
-            )
-
-    def _open_settings(self) -> None:
-        config_path = str(get_config_path())
-
-        try:
-            if sys.platform == "win32":
-                os.startfile(config_path)
-            elif sys.platform == "darwin":
-                os.system(f"open '{config_path}'")
-            else:
-                os.system(f"xdg-open '{config_path}'")
-
-            self._log_message(f"設定ファイルを開きました: {config_path}")
-            messagebox.showinfo(
-                "設定",
-                "設定ファイルをエディタで開きました。\n\n変更後は、このアプリケーションを再起動してください。",
-            )
-        except Exception as e:
-            self._log_message(f"✗ エラー: 設定ファイルを開けません: {str(e)}")
-            messagebox.showerror(
-                "エラー",
-                f"設定ファイルを開けません:\n\n{str(e)}",
             )
 
     def _open_exclude_items(self) -> None:
@@ -374,15 +320,13 @@ class OPHCheckerGUI:
             self.root.clipboard_clear()
             self.root.clipboard_append(input_path)
             self.root.update()
-            self._log_message(f"✓ 入力パスをクリップボードにコピーしました: {input_path}")
-            self.status_var.set("入力パスをコピーしました")
 
-            self._show_auto_close_message("コピー完了", f"入力パスをクリップボードにコピーしました:\n\n{input_path}", 2000)
+            self._show_auto_close_message("コピー完了", f"入力パスをクリップボードにコピーしました:\n\n{input_path}")
         except Exception as e:
             self._log_message(f"✗ エラー: クリップボードへのコピーに失敗しました: {str(e)}")
             messagebox.showerror("エラー", f"クリップボードへのコピーに失敗しました:\n\n{str(e)}")
 
-    def _show_auto_close_message(self, title: str, message: str, duration_ms: int = 2000) -> None:
+    def _show_auto_close_message(self, title: str, message: str, duration_ms: int = 1000) -> None:
         """3秒後に自動的に閉じるメッセージダイアログを表示"""
         dialog = tk.Toplevel(self.root)
         dialog.title(title)

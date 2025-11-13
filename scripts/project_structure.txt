@@ -1,0 +1,37 @@
+============================================================
+プロジェクト構造: OPHChecker
+パス: C:\Users\yokam\PycharmProjects\OPHChecker
+生成日時: 2025-11-13 14:35:28
+============================================================
+
+└── OPHChecker
+    ├── app
+    │   ├── __init__.py
+    │   └── main_window.py
+    ├── docs
+    │   ├── README.md
+    │   ├── CHANGELOG.md
+    │   └── LICENSE
+    ├── scripts
+    │   ├── __init__.py
+    │   ├── project_structure.py
+    │   └── version_manager.py
+    ├── service
+    │   ├── __init__.py
+    │   ├── surgery_comparator.py
+    │   ├── surgery_error_extractor.py
+    │   ├── surgery_schedule_processor.py
+    │   └── surgery_search_processor.py
+    ├── utils
+    │   ├── config.ini
+    │   ├── __init__.py
+    │   └── config_manager.py
+    ├── widgets
+    │   ├── __init__.py
+    │   ├── exclude_items_dialog.py
+    │   └── replacements_dialog.py
+    ├── requirements.txt
+    ├── build.py
+    ├── CLAUDE.md
+    ├── main.py
+    └── pyrightconfig.json
