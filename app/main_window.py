@@ -1,3 +1,4 @@
+import logging
 import os
 import threading
 import tkinter as tk
@@ -34,6 +35,7 @@ class OPHCheckerGUI:
         self.config = load_config()
         self._apply_appearance_settings()
         self._setup_ui()
+        logging.info(f"OPHChecker v{__version__} を起動しました")
 
     def _apply_appearance_settings(self) -> None:
         appearance = get_appearance_settings(self.config)
@@ -156,6 +158,7 @@ class OPHCheckerGUI:
         for path_key in required_paths:
             path_value = paths.get(path_key)
             if not path_value:
+                logging.error(f"設定ファイルで '{path_key}' が設定されていません")
                 messagebox.showerror(
                     "設定エラー",
                     f"設定ファイルで '{path_key}' が設定されていません",
@@ -163,6 +166,7 @@ class OPHCheckerGUI:
                 return False
 
             if not Path(path_value).exists():
+                logging.error(f"ファイルが見つかりません: {path_value}")
                 messagebox.showerror(
                     "ファイルエラー",
                     f"ファイルが見つかりません:\n{path_value}",
@@ -173,6 +177,7 @@ class OPHCheckerGUI:
 
     def _run_analysis(self) -> None:
         try:
+            logging.info("分析処理を開始します")
             self._log_message("=" * 60)
             self._log_message("分析処理を開始します")
             self._log_message("=" * 60)
@@ -188,51 +193,67 @@ class OPHCheckerGUI:
             Path(output_path).mkdir(parents=True, exist_ok=True)
 
             self._log_message("\n[1/4] 手術予定表の処理を開始...")
+            logging.info("[1/4] 手術予定表の処理を開始")
 
             try:
                 process_surgery_schedule(surgery_schedule_path, processed_surgery_schedule)
                 self._log_message("✓ 手術予定表の処理が完了しました")
+                logging.info("手術予定表の処理が完了しました")
             except Exception as e:
                 self._log_message(f"✗ エラー: {str(e)}")
+                logging.error(f"手術予定表の処理中にエラーが発生: {str(e)}", exc_info=True)
                 raise
 
             self._log_message("\n[2/4] 手術検索データの処理を開始...")
+            logging.info("[2/4] 手術検索データの処理を開始")
 
             try:
                 process_eye_surgery_data(surgery_search_path, processed_surgery_search_data)
                 self._log_message("✓ 手術検索データの処理が完了しました")
+                logging.info("手術検索データの処理が完了しました")
             except Exception as e:
                 self._log_message(f"✗ エラー: {str(e)}")
+                logging.error(f"手術検索データの処理中にエラーが発生: {str(e)}", exc_info=True)
                 raise
 
             self._log_message("\n[3/4] データ比較を開始...")
+            logging.info("[3/4] データ比較を開始")
 
             try:
                 compare_surgery_data(processed_surgery_search_data, processed_surgery_schedule, comparison_result)
                 self._log_message("✓ データ比較が完了しました")
+                logging.info("データ比較が完了しました")
             except Exception as e:
                 self._log_message(f"✗ エラー: {str(e)}")
+                logging.error(f"データ比較中にエラーが発生: {str(e)}", exc_info=True)
                 raise
 
             self._log_message("\n[4/4] 眼科手術指示確認ファイルを作成開始...")
+            logging.info("[4/4] 眼科手術指示確認ファイルを作成開始")
 
             try:
                 instruction_file = surgery_error_extractor(comparison_result, output_path)
                 if instruction_file:
                     self._log_message("✓ 眼科手術指示確認ファイルを作成しました")
+                    logging.info("眼科手術指示確認ファイルを作成しました")
                 else:
                     self._log_message("✓ 不一致および未入力データはありませんでした")
+                    logging.info("不一致および未入力データはありませんでした")
             except Exception as e:
                 self._log_message(f"✗ エラー: {str(e)}")
+                logging.error(f"眼科手術指示確認ファイルの作成中にエラーが発生: {str(e)}", exc_info=True)
                 raise
 
             df_search = pd.read_csv(processed_surgery_search_data, encoding='cp932')
             self._log_message(f"\n対象期間: {df_search['手術日'].min()} ～ {df_search['手術日'].max()}")
+            logging.info(f"対象期間: {df_search['手術日'].min()} ～ {df_search['手術日'].max()}")
 
             self.status_var.set("処理完了")
+            logging.info("すべての処理が正常に完了しました")
             self._open_output_folder(output_path)
 
         except Exception as e:
+            logging.error(f"分析処理中に予期しないエラーが発生: {str(e)}", exc_info=True)
             self._log_message("\n" + "=" * 60)
             self._log_message(f"✗ エラーが発生しました: {str(e)}")
             self._log_message("=" * 60)
@@ -245,7 +266,9 @@ class OPHCheckerGUI:
     def _open_output_folder(self, output_path: str) -> None:
         try:
             os.startfile(output_path)
+            logging.info(f"出力フォルダを開きました: {output_path}")
         except Exception as e:
+            logging.error(f"出力フォルダを開けません: {str(e)}", exc_info=True)
             self._log_message(f"✗ エラー: 出力フォルダを開けません: {str(e)}")
             messagebox.showerror(
                 "エラー",
@@ -273,9 +296,11 @@ class OPHCheckerGUI:
                 save_surgery_strings_to_remove(self.config, result['surgery_strings_to_remove'])
                 save_config(self.config)
 
+                logging.info("除外項目を保存しました")
                 self._log_message("✓ 除外項目を保存しました")
                 messagebox.showinfo("保存完了", "除外項目を保存しました", parent=self.root)
         except Exception as e:
+            logging.error(f"除外項目の編集中にエラーが発生: {str(e)}", exc_info=True)
             self._log_message(f"✗ エラー: 除外項目の編集中にエラーが発生しました: {str(e)}")
             messagebox.showerror("エラー", f"除外項目の編集中にエラーが発生しました:\n\n{str(e)}", parent=self.root)
 
@@ -304,9 +329,11 @@ class OPHCheckerGUI:
                 save_replacement_dict(self.config, 'Replacements', 'inpatient_replacements', result['inpatient_replacements'])
                 save_config(self.config)
 
+                logging.info("置換設定を保存しました")
                 self._log_message("✓ 置換設定を保存しました")
                 messagebox.showinfo("保存完了", "置換設定を保存しました", parent=self.root)
         except Exception as e:
+            logging.error(f"置換設定の編集中にエラーが発生: {str(e)}", exc_info=True)
             self._log_message(f"✗ エラー: 置換設定の編集中にエラーが発生しました: {str(e)}")
             messagebox.showerror("エラー", f"置換設定の編集中にエラーが発生しました:\n\n{str(e)}", parent=self.root)
 
@@ -315,6 +342,7 @@ class OPHCheckerGUI:
         input_path = paths.get("input_path", "")
 
         if not input_path:
+            logging.warning("入力パスが設定されていません")
             self._log_message("✗ 入力パスが設定されていません")
             messagebox.showwarning("警告", "入力パスが設定されていません")
             return
@@ -324,8 +352,10 @@ class OPHCheckerGUI:
             self.root.clipboard_append(input_path)
             self.root.update()
 
+            logging.info(f"入力パスをクリップボードにコピーしました: {input_path}")
             self._show_auto_close_message("コピー完了", f"入力パスをクリップボードにコピーしました:\n\n{input_path}")
         except Exception as e:
+            logging.error(f"クリップボードへのコピーに失敗: {str(e)}", exc_info=True)
             self._log_message(f"✗ エラー: クリップボードへのコピーに失敗しました: {str(e)}")
             messagebox.showerror("エラー", f"クリップボードへのコピーに失敗しました:\n\n{str(e)}")
 
@@ -351,9 +381,11 @@ class OPHCheckerGUI:
 
     def _close_application(self) -> None:
         if self.start_button.cget("state") == tk.DISABLED:
+            logging.warning("分析処理が実行中のため、アプリケーションを閉じることができません")
             messagebox.showwarning(
                 "実行中",
                 "分析処理が実行中です。\n処理が完了してからアプリケーションを閉じてください。",
             )
             return
+        logging.info("アプリケーションを終了します")
         self.root.quit()

@@ -1,3 +1,5 @@
+import logging
+
 import pandas as pd
 
 
@@ -18,16 +20,16 @@ def compare_surgery_data(
     df_search = pd.read_csv(processed_surgery_search_data, encoding='cp932')
     df_schedule = pd.read_csv(processed_surgery_schedule, encoding='cp932')
 
-    print(f"検索データ件数: {len(df_search)}件")
-    print(f"予定表データ件数（読み込み時）: {len(df_schedule)}件")
+    logging.info(f"検索データ件数: {len(df_search)}件")
+    logging.info(f"予定表データ件数（読み込み時）: {len(df_schedule)}件")
 
     # 手術日または患者IDが欠損している行を除外
     df_schedule_original_count = len(df_schedule)
     df_schedule = df_schedule.dropna(subset=['手術日', '患者ID'])
     if len(df_schedule) < df_schedule_original_count:
         removed_count = df_schedule_original_count - len(df_schedule)
-        print(f"警告: 予定表から手術日または患者IDが空の行を {removed_count}件 除外しました。")
-        print(f"予定表データ件数（除外後）: {len(df_schedule)}件")
+        logging.warning(f"予定表から手術日または患者IDが空の行を {removed_count}件 除外しました")
+        logging.info(f"予定表データ件数（除外後）: {len(df_schedule)}件")
 
     # 手術日を統一フォーマット（YYYY/MM/DD）に変換
     # 検索データの手術日フォーマットを自動判定
@@ -51,16 +53,16 @@ def compare_surgery_data(
         # NaN（欠損値）を除外してmin/maxを取得
         valid_dates = df_schedule['手術日'].dropna()
         if len(valid_dates) > 0:
-            print(f"予定表の手術日範囲: {valid_dates.min()} ～ {valid_dates.max()}")
+            logging.info(f"予定表の手術日範囲: {valid_dates.min()} ～ {valid_dates.max()}")
         else:
-            print("予定表に有効な手術日がありません。")
+            logging.warning("予定表に有効な手術日がありません")
 
         # NaNが含まれている場合は警告を表示
         nan_count = df_schedule['手術日'].isna().sum()
         if nan_count > 0:
-            print(f"\n警告: 予定表に手術日が空の行が {nan_count}件 あります。")
+            logging.warning(f"予定表に手術日が空の行が {nan_count}件 あります")
     else:
-        print("予定表にデータがありません。")
+        logging.warning("予定表にデータがありません")
 
     # 手術日と患者IDをキーとして左結合（left join）
     df_merged = df_search.merge(
@@ -116,18 +118,17 @@ def compare_surgery_data(
 
     # 統計情報を表示
     total_rows = len(df_output)
-    print(f"\n=== 比較結果の詳細 ===")
+    logging.info("=== 比較結果の詳細 ===")
 
     for col in ['入外_比較', '術眼_比較', '手術_比較', '医師_比較', '麻酔_比較']:
         true_count = (df_output[col] == True).sum()
         false_count = (df_output[col] == False).sum()
         not_entered_count = (df_output[col] == '未入力').sum()
 
-        print(f"{col.replace('_比較', '')}: 一致={true_count}件, 不一致={false_count}件, 未入力={not_entered_count}件")
+        logging.info(f"{col.replace('_比較', '')}: 一致={true_count}件, 不一致={false_count}件, 未入力={not_entered_count}件")
 
-    print(f"\n処理が完了しました。")
-    print(f"総件数: {total_rows}件")
-    print(f"出力ファイル: {comparison_result}")
+    logging.info(f"処理が完了しました: 総件数={total_rows}件")
+    logging.info(f"出力ファイル: {comparison_result}")
 
 
 if __name__ == '__main__':

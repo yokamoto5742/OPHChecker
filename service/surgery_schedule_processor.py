@@ -1,3 +1,4 @@
+import logging
 import unicodedata
 
 import pandas as pd
@@ -46,7 +47,7 @@ def process_surgery_schedule(surgery_schedule: str, processed_surgery_schedule: 
     # CSVファイルとして保存
     df_processed.to_csv(processed_surgery_schedule, index=False, encoding='cp932')
 
-    print(f"処理が完了しました。")
+    logging.info(f"手術予定表の処理が完了しました: {processed_surgery_schedule}")
 
 
 if __name__ == '__main__':

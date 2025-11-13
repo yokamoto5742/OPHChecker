@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 from pathlib import Path
 
@@ -29,7 +30,7 @@ def surgery_error_extractor(comparison_result: str, output_path: str) -> str:
 
     # エラーがない場合は処理を終了
     if len(df_errors) == 0:
-        print("不一致および未入力はありませんでした")
+        logging.info("不一致および未入力はありませんでした")
         return ""
 
     # 出力する列を選択
@@ -57,9 +58,9 @@ def surgery_error_extractor(comparison_result: str, output_path: str) -> str:
     # ファイルとして保存
     wb.save(output_filepath)
 
-    print(f"処理が完了しました")
-    print(f"エラー件数: {len(df_errors)}件")
-    print(f"出力ファイル: {output_filepath}")
+    logging.info(f"眼科手術指示確認ファイルの作成が完了しました")
+    logging.info(f"エラー件数: {len(df_errors)}件")
+    logging.info(f"出力ファイル: {output_filepath}")
 
     return str(output_filepath)
 

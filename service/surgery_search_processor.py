@@ -1,3 +1,4 @@
+import logging
 import unicodedata
 
 import pandas as pd
@@ -107,6 +108,8 @@ def process_eye_surgery_data(input_file_path: str, output_file_path: str) -> Non
 
     # CSVファイルに保存
     df_processed.to_csv(output_file_path, index=False, encoding='cp932')
+
+    logging.info(f"手術検索データの処理が完了しました: {output_file_path}")
 
 if __name__ == '__main__':
     config = load_config()
