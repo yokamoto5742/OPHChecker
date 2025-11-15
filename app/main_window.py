@@ -305,11 +305,10 @@ class OPHCheckerGUI:
 
     def _open_exclude_items(self) -> None:
         try:
-            # 現在の除外項目を取得
+            # 除外項目を取得
             exclusion_line_keywords = get_exclusion_line_keywords(self.config)
             surgery_strings_to_remove = get_surgery_strings_to_remove(self.config)
 
-            # ダイアログを表示
             dialog = ExcludeItemsDialog(
                 self.root,
                 exclusion_line_keywords,
@@ -318,7 +317,6 @@ class OPHCheckerGUI:
             )
             result = dialog.show()
 
-            # 結果が返されたら保存
             if result:
                 save_exclusion_line_keywords(self.config, result['exclusion_line_keywords'])
                 save_surgery_strings_to_remove(self.config, result['surgery_strings_to_remove'])
@@ -335,12 +333,11 @@ class OPHCheckerGUI:
 
     def _open_replacements(self) -> None:
         try:
-            # 現在の置換設定を取得
+            # 置換設定を取得
             anesthesia_replacements = get_replacement_dict(self.config, 'Replacements', 'anesthesia_replacements')
             surgeon_replacements = get_replacement_dict(self.config, 'Replacements', 'surgeon_replacements')
             inpatient_replacements = get_replacement_dict(self.config, 'Replacements', 'inpatient_replacements')
 
-            # ダイアログを表示
             dialog = ReplacementsDialog(
                 self.root,
                 anesthesia_replacements,
@@ -350,7 +347,6 @@ class OPHCheckerGUI:
             )
             result = dialog.show()
 
-            # 結果が返されたら保存
             if result:
                 save_replacement_dict(self.config, 'Replacements', 'anesthesia_replacements', result['anesthesia_replacements'])
                 save_replacement_dict(self.config, 'Replacements', 'surgeon_replacements', result['surgeon_replacements'])
@@ -388,7 +384,6 @@ class OPHCheckerGUI:
             messagebox.showerror("エラー", f"クリップボードへのコピーに失敗しました:\n\n{str(e)}")
 
     def _show_auto_close_message(self, title: str, message: str, duration_ms: int = 1000) -> None:
-        """3秒後に自動的に閉じるメッセージダイアログを表示"""
         dialog = tk.Toplevel(self.root)
         dialog.title(title)
         dialog.transient(self.root)
