@@ -135,9 +135,13 @@ OPHChecker/
 │   ├── __init__.py              # バージョン・日付管理
 │   └── main_window.py           # メイン画面UI
 │
+├── assets/                       # アプリケーションリソース
+│   ├── OPHChecker.ico           # アイコンファイル
+│   └── OPHChecker.png           # 画像ファイル
+│
 ├── service/                      # データ処理サービス層
 │   ├── surgery_schedule_processor.py    # Excel手術予定処理
-│   ├── surgery_search_processor.py      # CSV眼科データクリーニング (10+ ヘルパー関数)
+│   ├── surgery_search_processor.py      # CSV眼科データクリーニング
 │   ├── surgery_comparator.py            # データ突合比較
 │   ├── surgery_error_extractor.py       # エラーレコード抽出・レポート
 │   └── __init__.py
@@ -145,18 +149,20 @@ OPHChecker/
 ├── utils/                        # ユーティリティ・設定管理
 │   ├── config_manager.py        # 設定読込・保存
 │   ├── config.ini               # 設定ファイル
+│   ├── log_rotation.py          # ログローテーション管理
 │   └── __init__.py
 │
 ├── widgets/                      # UI コンポーネント
+│   ├── exclude_items_dialog.py  # 除外項目設定ダイアログ
+│   ├── replacements_dialog.py   # 置換設定ダイアログ
 │   └── __init__.py
 │
 ├── tests/                        # テストスイート
-│   ├── test_main.py
-│   ├── app/, service/, utils/, widgets/
-│   └── __init__.py
 │
 ├── scripts/
 │   ├── version_manager.py       # バージョン・日付自動更新
+│   ├── project_structure.py     # プロジェクト構造出力スクリプト
+│   ├── project_structure.txt    # 構造出力結果
 │   └── __init__.py
 │
 ├── docs/

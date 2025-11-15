@@ -209,7 +209,7 @@ class OPHCheckerGUI:
         )
 
     def _process_surgery_search(self, paths: dict) -> None:
-        """手術検索データの処理"""
+        """眼科手術検索データの処理"""
         self._execute_step(
             2, 4, "手術検索データの処理",
             process_eye_surgery_data,
