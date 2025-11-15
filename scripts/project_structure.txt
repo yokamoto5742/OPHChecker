@@ -1,7 +1,7 @@
 ============================================================
 プロジェクト構造: OPHChecker
 パス: C:\Users\yokam\PycharmProjects\OPHChecker
-生成日時: 2025-11-15 15:34:44
+生成日時: 2025-11-16 08:36:52
 ============================================================
 
 └── OPHChecker
@@ -30,6 +30,7 @@
     │   └── log_rotation.py
     ├── widgets
     │   ├── __init__.py
+    │   ├── base_dialog.py
     │   ├── exclude_items_dialog.py
     │   └── replacements_dialog.py
     ├── requirements.txt

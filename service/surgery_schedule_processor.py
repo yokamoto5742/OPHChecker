@@ -1,6 +1,6 @@
 import logging
 import unicodedata
-from typing import cast
+from typing import Mapping, cast
 
 import pandas as pd
 
@@ -35,10 +35,8 @@ def process_surgery_schedule(surgery_schedule: str, processed_surgery_schedule: 
 
     df_processed = df_processed.drop(columns=['術式'])
 
-    rename_mapping = {'日付': '手術日', 'ID': '患者ID', '術者': '医師'}
-    result = df_processed.rename(columns=rename_mapping)
-    if isinstance(result, pd.DataFrame):
-        df_processed = result
+    rename_mapping: Mapping[str, str] = {'日付': '手術日', 'ID': '患者ID', '術者': '医師'}
+    df_processed = cast(pd.DataFrame, df_processed.rename(columns=rename_mapping))
 
     df_processed = cast(pd.DataFrame, df_processed[['手術日', '患者ID', '氏名', '入外', '術眼', '手術', '医師', '麻酔']])
 
