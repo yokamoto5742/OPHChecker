@@ -9,7 +9,7 @@ from openpyxl import load_workbook
 
 def surgery_error_extractor(comparison_result: str, output_path: str, template_path: str) -> str:
     """
-    comparison_resultからFALSEまたは未入力が含まれる行を抽出して眼科手術指示確認.xlsxとして出力
+    comparison_resultからFALSEまたは未入力が含まれる行を抽出し眼科手術指示確認.xlsxとして出力
 
     Args:
         comparison_result: 比較結果CSVファイルのパス

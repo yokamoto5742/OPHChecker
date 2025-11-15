@@ -22,6 +22,7 @@ def process_surgery_schedule(surgery_schedule: str, processed_surgery_schedule: 
     date_series = cast(pd.Series, df_processed['日付'])
     df_processed['日付'] = pd.to_datetime(date_series).dt.strftime('%Y/%m/%d')
 
+    # 術式列の値を全角カナに変換
     surgery_series = cast(pd.Series, df_processed['術式'])
     df_processed['術式'] = surgery_series.apply(
         lambda x: unicodedata.normalize('NFKC', str(x)) if pd.notna(x) else x
@@ -35,7 +36,7 @@ def process_surgery_schedule(surgery_schedule: str, processed_surgery_schedule: 
     df_processed = df_processed.drop(columns=['術式'])
 
     rename_mapping = {'日付': '手術日', 'ID': '患者ID', '術者': '医師'}
-    result = df_processed.rename(columns=rename_mapping)  # type: ignore[call-overload]
+    result = df_processed.rename(columns=rename_mapping)
     if isinstance(result, pd.DataFrame):
         df_processed = result
 
