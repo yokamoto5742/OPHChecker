@@ -1,29 +1,19 @@
 import tkinter as tk
 from tkinter import messagebox, ttk
 
+from widgets.base_dialog import BaseDialog
 
-class ReplacementsDialog:
+
+class ReplacementsDialog(BaseDialog):
     def __init__(self, parent: tk.Tk, anesthesia_replacements: dict[str, str],
                  surgeon_replacements: dict[str, str], inpatient_replacements: dict[str, str],
                  font_size: int = 11) -> None:
-        self.parent = parent
-        self.result = None
-        self.font_size = font_size
-
-        self.dialog = tk.Toplevel(parent)
-        self.dialog.title("置換設定")
-        self.dialog.transient(parent)
-        self.dialog.grab_set()
-
         self.anesthesia_replacements = anesthesia_replacements.copy()
         self.surgeon_replacements = surgeon_replacements.copy()
         self.inpatient_replacements = inpatient_replacements.copy()
-
-        self._setup_ui()
-        self._center_window()
+        super().__init__(parent, "置換設定", font_size)
 
     def _setup_ui(self) -> None:
-        # タブ作成
         notebook = ttk.Notebook(self.dialog)
         notebook.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
 
@@ -39,34 +29,7 @@ class ReplacementsDialog:
         notebook.add(inpatient_frame, text="入外")
         self._setup_replacements_tab(inpatient_frame, self.inpatient_replacements, "inpatient")
 
-        button_frame = tk.Frame(self.dialog)
-        button_frame.pack(fill=tk.X, padx=10, pady=10)
-
-        save_button = tk.Button(
-            button_frame,
-            text="保存",
-            command=self._save,
-            font=("Arial", self.font_size),
-            bg="#4CAF50",
-            fg="white",
-            padx=20,
-            pady=5,
-            width=10,
-        )
-        save_button.pack(side=tk.LEFT, padx=5)
-
-        cancel_button = tk.Button(
-            button_frame,
-            text="キャンセル",
-            command=self._cancel,
-            font=("Arial", self.font_size),
-            bg="#f44336",
-            fg="white",
-            padx=20,
-            pady=5,
-            width=10,
-        )
-        cancel_button.pack(side=tk.LEFT, padx=5)
+        self._create_button_frame()
 
     def _setup_replacements_tab(self, parent: tk.Frame, replacements_dict: dict[str, str], tab_type: str) -> None:
         description = tk.Label(
@@ -77,20 +40,7 @@ class ReplacementsDialog:
         )
         description.pack(fill=tk.X, padx=10, pady=(10, 5))
 
-        list_frame = tk.Frame(parent)
-        list_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
-
-        scrollbar = tk.Scrollbar(list_frame)
-        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-
-        listbox = tk.Listbox(
-            list_frame,
-            font=("Arial", self.font_size),
-            yscrollcommand=scrollbar.set,
-            selectmode=tk.SINGLE,
-        )
-        listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        scrollbar.config(command=listbox.yview)
+        listbox = self._create_listbox_with_scrollbar(parent)
 
         for key, value in replacements_dict.items():
             listbox.insert(tk.END, f"{key} → {value}")
@@ -102,35 +52,12 @@ class ReplacementsDialog:
         elif tab_type == "inpatient":
             self.inpatient_listbox = listbox
 
-        btn_frame = tk.Frame(parent)
-        btn_frame.pack(fill=tk.X, padx=10, pady=5)
-
-        add_button = tk.Button(
-            btn_frame,
-            text="追加",
-            command=lambda: self._add_replacement(listbox, replacements_dict),
-            font=("Arial", self.font_size - 1),
-            width=10,
+        self._create_action_buttons(
+            parent,
+            lambda: self._add_replacement(listbox, replacements_dict),
+            lambda: self._edit_replacement(listbox, replacements_dict),
+            lambda: self._delete_replacement(listbox, replacements_dict),
         )
-        add_button.pack(side=tk.LEFT, padx=2)
-
-        edit_button = tk.Button(
-            btn_frame,
-            text="編集",
-            command=lambda: self._edit_replacement(listbox, replacements_dict),
-            font=("Arial", self.font_size - 1),
-            width=10,
-        )
-        edit_button.pack(side=tk.LEFT, padx=2)
-
-        delete_button = tk.Button(
-            btn_frame,
-            text="削除",
-            command=lambda: self._delete_replacement(listbox, replacements_dict),
-            font=("Arial", self.font_size - 1),
-            width=10,
-        )
-        delete_button.pack(side=tk.LEFT, padx=2)
 
     def _add_replacement(self, listbox: tk.Listbox, replacements_dict: dict[str, str]) -> None:
         dialog = tk.Toplevel(self.dialog)
@@ -286,25 +213,3 @@ class ReplacementsDialog:
             'inpatient_replacements': self.inpatient_replacements,
         }
         self.dialog.destroy()
-
-    def _cancel(self) -> None:
-        self.result = None
-        self.dialog.destroy()
-
-    def _center_window(self) -> None:
-        self.dialog.update_idletasks()
-        width = 600
-        height = 500
-        x = (self.dialog.winfo_screenwidth() // 2) - (width // 2)
-        y = (self.dialog.winfo_screenheight() // 2) - (height // 2)
-        self.dialog.geometry(f"{width}x{height}+{x}+{y}")
-
-    def _center_window_on_parent(self, child: tk.Toplevel, parent: tk.Toplevel) -> None:
-        child.update_idletasks()
-        x = parent.winfo_x() + (parent.winfo_width() // 2) - (child.winfo_width() // 2)
-        y = parent.winfo_y() + (parent.winfo_height() // 2) - (child.winfo_height() // 2)
-        child.geometry(f"+{x}+{y}")
-
-    def show(self) -> dict | None:
-        self.dialog.wait_window()
-        return self.result
