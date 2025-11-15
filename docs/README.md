@@ -1,30 +1,27 @@
 # OPHChecker
 
-眼科手術データ処理用の Python アプリケーション。手術スケジュール、検索データ、エラーデータを一元的に処理し、データ品質を確保します。
+眼科手術データ処理用の Python アプリケーション。手術予定、検索データ、エラーデータを一元的に処理し、データ品質を確保します。
 
 ## 主な機能
 
-- **手術スケジュール変換**: Excel ファイルを CSV 形式に変換し、統一されたカラム構造に整形
-- **眼科データクリーニング**: CSVファイルを清掃・標準化し、麻酔・入院情報を統一
-- **手術データ比較**: スケジュール データと検索データの突合、差分確認
-- **エラー抽出・レポート**: 不正なレコードを自動検出し、Excel レポート生成
-- **自動化ビルド**: PyInstaller でスタンドアロン実行ファイルを生成、バージョン自動管理
-- **日本語対応**: Windows Shift-JIS (cp932) エンコーディングで日本語ファイル対応
+- **手術予定表変換**: ExcelファイルをCSV形式に変換し、統一されたカラム構造に整形
+- **眼科手術検索データ変換**: CSVファイルを変換し、統一されたカラム構造に整形
+- **手術データ比較**: 手術予定表と眼科手術検索データの突合、差分確認
+- **エラー抽出・レポート**: 不正なレコードを自動検出し、Excelレポート生成
 
-**バージョン**: 1.0.0
+**現在のバージョン**: 1.0.0
 **更新日**: 2025年11月11日
 
 ## システム要件
 
-- **Python**: 3.13 以上
-- **OS**: Windows (ファイルパスが Windows パスになっています)
-- **メモリ**: 最小 2GB (大規模 CSV 処理時は 4GB 推奨)
+- **Python**: 3.12 以上
+- **OS**: Windows 11
+- **メモリ**: 最小 2GB
 
 ### 必須ライブラリ
 
 - pandas (1.5.3) - データ処理
 - openpyxl (3.1.5) - Excel ファイル操作
-- pyinstaller (6.16.0) - 実行ファイル生成
 
 ## セットアップ手順
 
@@ -53,20 +50,7 @@ pip install -r requirements.txt
 
 ### 4. 設定ファイルを準備
 
-`utils/config.ini` に手術データファイルのパスを設定します。デフォルト値は以下の通りです:
-
-```ini
-[Paths]
-input_path = C:\Shinseikai\OPHChecker\input
-surgery_search_data = C:\Shinseikai\OPHChecker\input\眼科システム手術検索.csv
-processed_surgery_search_data = C:\Shinseikai\OPHChecker\processed\processed_surgery_search.csv
-surgery_schedule = C:\Shinseikai\OPHChecker\input\手術予定表.xls
-processed_surgery_schedule = C:\Shinseikai\OPHChecker\processed\processed_surgery_schedule.csv
-comparison_result = C:\Shinseikai\OPHChecker\processed\comparison_result.csv
-template_path = C:\Shinseikai\OPHChecker\眼科手術指示確認.xlsx
-output_path = C:\Shinseikai\OPHChecker\output
-```
-
+`utils/config.ini` に手術データファイルのパスを設定します。
 実際の環境に合わせて、パスを修正してください。
 
 ### 5. インストール確認
@@ -83,7 +67,7 @@ python -m pytest tests/ -v
 
 ### 基本的な処理フロー
 
-#### 1. 手術スケジュール処理 (Excel → CSV)
+#### 1. 手術予定処理 (Excel → CSV)
 
 ```python
 from service.surgery_schedule_processor import process_surgery_schedule
@@ -96,7 +80,7 @@ output_file = config['Paths']['processed_surgery_schedule']
 process_surgery_schedule(input_file, output_file)
 ```
 
-#### 2. 眼科システムデータクリーニング
+#### 2. 眼科手術検索データクリーニング
 
 ```python
 from service.surgery_search_processor import process_eye_surgery_data
@@ -149,17 +133,17 @@ python main.py
 OPHChecker/
 ├── app/
 │   ├── __init__.py              # バージョン・日付管理
-│   └── __version__ = "1.0.0"
+│   └── main_window.py           # メイン画面UI
 │
 ├── service/                      # データ処理サービス層
-│   ├── surgery_schedule_processor.py    # Excel手術スケジュール処理
+│   ├── surgery_schedule_processor.py    # Excel手術予定処理
 │   ├── surgery_search_processor.py      # CSV眼科データクリーニング (10+ ヘルパー関数)
 │   ├── surgery_comparator.py            # データ突合比較
 │   ├── surgery_error_extractor.py       # エラーレコード抽出・レポート
 │   └── __init__.py
 │
 ├── utils/                        # ユーティリティ・設定管理
-│   ├── config_manager.py        # 設定読込・保存 (16関数)
+│   ├── config_manager.py        # 設定読込・保存
 │   ├── config.ini               # 設定ファイル
 │   └── __init__.py
 │
@@ -192,7 +176,7 @@ OPHChecker/
 
 ### surgery_schedule_processor.py
 
-Excel 形式の手術スケジュール(`手術予定表.xls`)を CSV 形式に変換します。
+Excel形式の手術予定(`手術予定表.xls`)を CSV形式に変換します。
 
 **機能**:
 - 手術日時の解析・変換
@@ -230,7 +214,7 @@ process_eye_surgery_data('input.csv', 'output.csv')
 
 ### surgery_comparator.py
 
-スケジュールデータと検索データを突き合わせて差分を確認し、レポートを生成します。
+手術予定データと眼科手術検索データを突き合わせて差分を確認し、レポートを生成します。
 
 **機能**:
 - 2つのデータセット間の差分抽出
@@ -246,7 +230,7 @@ compare_surgery_data('schedule.csv', 'search.csv', 'result.csv')
 
 ### surgery_error_extractor.py
 
-エラー・不正なレコードを検出し、Excel レポート(`眼科手術指示確認.xlsx`)を生成します。
+エラー・不正なレコードを検出し、Excelレポート(`眼科手術指示確認.xlsx`)を生成します。
 
 **機能**:
 - 比較結果から不正レコード抽出
@@ -347,12 +331,6 @@ output_path = C:\Shinseikai\OPHChecker\output
 
 データ標準化用の置換辞書 (オリジナル値:統一値)
 
-```ini
-anesthesia_replacements = 球後麻酔:局所,局所麻酔:局所,点眼麻酔:局所,全身麻酔:全身
-surgeon_replacements = 橋本義弘:橋本,植田芳樹:植田,増子杏:増子,田中伸弥:田中
-inpatient_replacements = あやめ:入院,わかば:入院,さくら:入院,外来:外来
-```
-
 ## 開発コマンド
 
 ### テスト実行
@@ -371,7 +349,7 @@ python -m pytest tests/test_main.py -v
 ### 型チェック
 
 ```bash
-# Pyright で型チェック (Python 3.13, standard mode)
+# Pyright で型チェック (Python 3.12, standard mode)
 pyright
 ```
 
@@ -400,23 +378,13 @@ python -c "from scripts.version_manager import update_version; update_version()"
 
 主要パッケージ一覧は `requirements.txt` を参照してください。
 
-```
-pandas==1.5.3
-openpyxl==3.1.5
-pyinstaller==6.16.0
-pyright==1.1.407
-pytest==8.4.2
-pytest-cov==7.0.0
-coverage==7.11.0
-```
-
 ## コード規約
 
 ### 型ヒント
 
 - すべての関数パラメータに型ヒント必須
 - すべての関数の戻り値に型ヒント必須
-- Pyright 設定: `standard` モード, Python 3.13
+- Pyright 設定: `standard` モード, Python 3.12
 
 ```python
 from typing import Optional
@@ -501,18 +469,6 @@ df.to_csv('output.csv', encoding='cp932', index=False)
 ```bash
 cd C:\Users\yokam\PycharmProjects\OPHChecker
 python -m pytest tests/ -v
-```
-
-### メモリ不足でクラッシュ
-
-**原因**: 大規模 CSV ファイル処理時にメモリ溢れ
-
-**解決策**: pandas のチャンク読み込みを使用
-
-```python
-for chunk in pd.read_csv('large_file.csv', encoding='cp932', chunksize=10000):
-    # chunk ごとに処理
-    process_chunk(chunk)
 ```
 
 ## 注意事項
