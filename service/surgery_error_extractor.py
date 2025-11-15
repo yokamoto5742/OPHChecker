@@ -6,13 +6,14 @@ import pandas as pd
 from openpyxl import load_workbook
 
 
-def surgery_error_extractor(comparison_result: str, output_path: str) -> str:
+def surgery_error_extractor(comparison_result: str, output_path: str, template_path: str) -> str:
     """
     comparison_resultからFALSEまたは未入力が含まれる行を抽出して眼科手術指示確認.xlsxとして出力
 
     Args:
         comparison_result: 比較結果CSVファイルのパス
         output_path: 出力先ディレクトリのパス
+        template_path: テンプレートExcelファイルのパス
 
     Returns:
         生成されたファイルのパス
@@ -46,7 +47,6 @@ def surgery_error_extractor(comparison_result: str, output_path: str) -> str:
     output_filepath = Path(output_path) / output_filename
 
     # テンプレートファイルを読み込み
-    template_path = r'C:\Shinseikai\OPHChecker\眼科手術指示確認.xlsx'
     wb = load_workbook(template_path)
     ws = wb.active
 
@@ -73,5 +73,6 @@ if __name__ == '__main__':
 
     surgery_error_extractor(
         paths['comparison_result'],
-        paths['output_path']
+        paths['output_path'],
+        paths['template_path']
     )

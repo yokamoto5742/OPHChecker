@@ -8,7 +8,7 @@ from unittest.mock import patch
 
 import pytest
 
-from utils.log_rotation import cleanup_old_logs, load_config, setup_logging
+from utils.log_rotation import cleanup_old_logs, setup_logging
 
 
 @pytest.fixture
@@ -105,25 +105,3 @@ def test_setup_logging_creates_log_directory(temp_config):
             setup_logging(temp_config)
 
         assert log_dir.exists()
-
-
-def test_load_config_returns_configparser():
-    """load_config()がConfigParserオブジェクトを返す"""
-    # 一時的な設定ファイルを作成
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.ini', encoding='utf-8') as f:
-        f.write("""[LOGGING]
-log_directory = logs
-log_retention_days = 7
-""")
-        config_path = f.name
-
-    try:
-        # config.iniのパスをモック
-        with patch('utils.log_rotation.os.path.join', return_value=config_path):
-            result = load_config()
-            assert isinstance(result, configparser.ConfigParser)
-    finally:
-        try:
-            os.unlink(config_path)
-        except:
-            pass

@@ -91,7 +91,8 @@ def test_surgery_error_extractor_creates_file_with_errors(temp_comparison_file, 
 
             result = surgery_error_extractor(
                 temp_comparison_file['comparison'],
-                temp_comparison_file['output_dir']
+                temp_comparison_file['output_dir'],
+                temp_template_file
             )
 
             # ファイルパスが返される
@@ -99,7 +100,7 @@ def test_surgery_error_extractor_creates_file_with_errors(temp_comparison_file, 
             assert Path(result).exists()
 
 
-def test_surgery_error_extractor_returns_empty_without_errors():
+def test_surgery_error_extractor_returns_empty_without_errors(temp_template_file):
     """エラーがない場合は空文字列を返す"""
     temp_dir = tempfile.mkdtemp()
 
@@ -117,7 +118,8 @@ def test_surgery_error_extractor_returns_empty_without_errors():
     try:
         result = surgery_error_extractor(
             str(comparison_path),
-            str(output_dir)
+            str(output_dir),
+            temp_template_file
         )
 
         # 空文字列が返される
@@ -139,7 +141,8 @@ def test_surgery_error_extractor_extracts_false_records(temp_comparison_file, te
 
         result = surgery_error_extractor(
             temp_comparison_file['comparison'],
-            temp_comparison_file['output_dir']
+            temp_comparison_file['output_dir'],
+            temp_template_file
         )
 
         # 結果ファイルを読み込み
@@ -160,7 +163,8 @@ def test_surgery_error_extractor_extracts_uninput_records(temp_comparison_file, 
 
         result = surgery_error_extractor(
             temp_comparison_file['comparison'],
-            temp_comparison_file['output_dir']
+            temp_comparison_file['output_dir'],
+            temp_template_file
         )
 
         # 結果ファイルを読み込み
@@ -178,7 +182,8 @@ def test_surgery_error_extractor_correct_columns(temp_comparison_file, temp_temp
 
         result = surgery_error_extractor(
             temp_comparison_file['comparison'],
-            temp_comparison_file['output_dir']
+            temp_comparison_file['output_dir'],
+            temp_template_file
         )
 
         # 結果ファイルを読み込み
@@ -200,7 +205,8 @@ def test_surgery_error_extractor_filename_format(temp_comparison_file, temp_temp
 
         result = surgery_error_extractor(
             temp_comparison_file['comparison'],
-            temp_comparison_file['output_dir']
+            temp_comparison_file['output_dir'],
+            temp_template_file
         )
 
         filename = Path(result).name
@@ -223,7 +229,8 @@ def test_surgery_error_extractor_creates_output_directory(temp_comparison_file, 
 
         result = surgery_error_extractor(
             temp_comparison_file['comparison'],
-            temp_comparison_file['output_dir']
+            temp_comparison_file['output_dir'],
+            temp_template_file
         )
 
         # ディレクトリが作成されている

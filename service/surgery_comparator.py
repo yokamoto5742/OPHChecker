@@ -36,8 +36,9 @@ def compare_surgery_data(
     try:
         # まずYY/MM/DD形式で試行
         df_search['手術日'] = pd.to_datetime(df_search['手術日'], format='%y/%m/%d').dt.strftime('%Y/%m/%d')
-    except:
+    except (ValueError, TypeError) as e:
         # 失敗したら自動判定
+        logging.warning(f"手術日のフォーマット変換に失敗したため、自動判定を使用します: {e}")
         df_search['手術日'] = pd.to_datetime(df_search['手術日']).dt.strftime('%Y/%m/%d')
 
     # 予定表の手術日フォーマットを自動判定して統一

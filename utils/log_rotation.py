@@ -1,15 +1,9 @@
-import os
 import logging
-import configparser
-from logging.handlers import TimedRotatingFileHandler
+import os
 from datetime import datetime, timedelta
+from logging.handlers import TimedRotatingFileHandler
 
-
-def load_config() -> configparser.ConfigParser:
-    config = configparser.ConfigParser()
-    config_path = os.path.join(os.path.dirname(__file__), 'config.ini')
-    config.read(config_path)
-    return config
+import configparser
 
 
 def setup_logging(config: configparser.ConfigParser):

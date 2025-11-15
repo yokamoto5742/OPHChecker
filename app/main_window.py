@@ -4,6 +4,7 @@ import threading
 import tkinter as tk
 from pathlib import Path
 from tkinter import messagebox, scrolledtext
+from typing import Any, Callable
 
 import pandas as pd
 
@@ -175,6 +176,97 @@ class OPHCheckerGUI:
 
         return True
 
+    def _execute_step(
+        self,
+        step_num: int,
+        total_steps: int,
+        step_name: str,
+        func: Callable,
+        *args: Any,
+        **kwargs: Any
+    ) -> Any:
+        """処理ステップを実行"""
+        self._log_message(f"\n[{step_num}/{total_steps}] {step_name}を開始...")
+        logging.info(f"[{step_num}/{total_steps}] {step_name}を開始")
+
+        try:
+            result = func(*args, **kwargs)
+            self._log_message(f"✓ {step_name}が完了しました")
+            logging.info(f"{step_name}が完了しました")
+            return result
+        except Exception as e:
+            self._log_message(f"✗ エラー: {str(e)}")
+            logging.error(f"{step_name}中にエラーが発生: {str(e)}", exc_info=True)
+            raise
+
+    def _process_surgery_schedule(self, paths: dict) -> None:
+        """手術予定表の処理"""
+        self._execute_step(
+            1, 4, "手術予定表の処理",
+            process_surgery_schedule,
+            paths['surgery_schedule'],
+            paths['processed_surgery_schedule']
+        )
+
+    def _process_surgery_search(self, paths: dict) -> None:
+        """手術検索データの処理"""
+        self._execute_step(
+            2, 4, "手術検索データの処理",
+            process_eye_surgery_data,
+            paths['surgery_search_data'],
+            paths['processed_surgery_search_data']
+        )
+
+    def _compare_surgery_data(self, paths: dict) -> None:
+        """データ比較"""
+        self._execute_step(
+            3, 4, "データ比較",
+            compare_surgery_data,
+            paths['processed_surgery_search_data'],
+            paths['processed_surgery_schedule'],
+            paths['comparison_result']
+        )
+
+    def _extract_surgery_errors(self, paths: dict) -> str:
+        """眼科手術指示確認ファイルを作成"""
+        self._log_message("\n[4/4] 眼科手術指示確認ファイルを作成開始...")
+        logging.info("[4/4] 眼科手術指示確認ファイルを作成開始")
+
+        try:
+            instruction_file = surgery_error_extractor(
+                paths['comparison_result'],
+                paths['output_path'],
+                paths['template_path']
+            )
+            if instruction_file:
+                self._log_message("✓ 眼科手術指示確認ファイルを作成しました")
+                logging.info("眼科手術指示確認ファイルを作成しました")
+            else:
+                self._log_message("✓ 不一致および未入力データはありませんでした")
+                logging.info("不一致および未入力データはありませんでした")
+            return instruction_file
+        except Exception as e:
+            self._log_message(f"✗ エラー: {str(e)}")
+            logging.error(f"眼科手術指示確認ファイルの作成中にエラーが発生: {str(e)}", exc_info=True)
+            raise
+
+    def _log_completion_summary(self, processed_surgery_search_data: str) -> None:
+        """完了サマリーをログに記録"""
+        df_search = pd.read_csv(processed_surgery_search_data, encoding='cp932')
+        self._log_message(f"\n対象期間: {df_search['手術日'].min()} ～ {df_search['手術日'].max()}")
+        logging.info(f"対象期間: {df_search['手術日'].min()} ～ {df_search['手術日'].max()}")
+        self.status_var.set("処理完了")
+        logging.info("すべての処理が正常に完了しました")
+
+    def _handle_analysis_error(self, e: Exception) -> None:
+        """分析エラーをハンドリング"""
+        logging.error(f"分析処理中に予期しないエラーが発生: {str(e)}", exc_info=True)
+        self._log_message("\n" + "=" * 60)
+        self._log_message(f"✗ エラーが発生しました: {str(e)}")
+        self._log_message("=" * 60)
+        self.status_var.set(f"エラー: {str(e)}")
+        messagebox.showerror("エラー", f"処理中にエラーが発生しました:\n\n{str(e)}")
+
     def _run_analysis(self) -> None:
         try:
             logging.info("分析処理を開始します")
@@ -183,82 +275,18 @@ class OPHCheckerGUI:
             self._log_message("=" * 60)
 
             paths = get_paths(self.config)
-            surgery_search_path = paths["surgery_search_data"]
-            surgery_schedule_path = paths["surgery_schedule"]
-            output_path = paths["output_path"]
-            processed_surgery_schedule = paths['processed_surgery_schedule']
-            processed_surgery_search_data = paths['processed_surgery_search_data']
-            comparison_result = paths['comparison_result']
+            Path(paths["output_path"]).mkdir(parents=True, exist_ok=True)
 
-            Path(output_path).mkdir(parents=True, exist_ok=True)
+            self._process_surgery_schedule(paths)
+            self._process_surgery_search(paths)
+            self._compare_surgery_data(paths)
+            self._extract_surgery_errors(paths)
 
-            self._log_message("\n[1/4] 手術予定表の処理を開始...")
-            logging.info("[1/4] 手術予定表の処理を開始")
-
-            try:
-                process_surgery_schedule(surgery_schedule_path, processed_surgery_schedule)
-                self._log_message("✓ 手術予定表の処理が完了しました")
-                logging.info("手術予定表の処理が完了しました")
-            except Exception as e:
-                self._log_message(f"✗ エラー: {str(e)}")
-                logging.error(f"手術予定表の処理中にエラーが発生: {str(e)}", exc_info=True)
-                raise
-
-            self._log_message("\n[2/4] 手術検索データの処理を開始...")
-            logging.info("[2/4] 手術検索データの処理を開始")
-
-            try:
-                process_eye_surgery_data(surgery_search_path, processed_surgery_search_data)
-                self._log_message("✓ 手術検索データの処理が完了しました")
-                logging.info("手術検索データの処理が完了しました")
-            except Exception as e:
-                self._log_message(f"✗ エラー: {str(e)}")
-                logging.error(f"手術検索データの処理中にエラーが発生: {str(e)}", exc_info=True)
-                raise
-
-            self._log_message("\n[3/4] データ比較を開始...")
-            logging.info("[3/4] データ比較を開始")
-
-            try:
-                compare_surgery_data(processed_surgery_search_data, processed_surgery_schedule, comparison_result)
-                self._log_message("✓ データ比較が完了しました")
-                logging.info("データ比較が完了しました")
-            except Exception as e:
-                self._log_message(f"✗ エラー: {str(e)}")
-                logging.error(f"データ比較中にエラーが発生: {str(e)}", exc_info=True)
-                raise
-
-            self._log_message("\n[4/4] 眼科手術指示確認ファイルを作成開始...")
-            logging.info("[4/4] 眼科手術指示確認ファイルを作成開始")
-
-            try:
-                instruction_file = surgery_error_extractor(comparison_result, output_path)
-                if instruction_file:
-                    self._log_message("✓ 眼科手術指示確認ファイルを作成しました")
-                    logging.info("眼科手術指示確認ファイルを作成しました")
-                else:
-                    self._log_message("✓ 不一致および未入力データはありませんでした")
-                    logging.info("不一致および未入力データはありませんでした")
-            except Exception as e:
-                self._log_message(f"✗ エラー: {str(e)}")
-                logging.error(f"眼科手術指示確認ファイルの作成中にエラーが発生: {str(e)}", exc_info=True)
-                raise
-
-            df_search = pd.read_csv(processed_surgery_search_data, encoding='cp932')
-            self._log_message(f"\n対象期間: {df_search['手術日'].min()} ～ {df_search['手術日'].max()}")
-            logging.info(f"対象期間: {df_search['手術日'].min()} ～ {df_search['手術日'].max()}")
-
-            self.status_var.set("処理完了")
-            logging.info("すべての処理が正常に完了しました")
-            self._open_output_folder(output_path)
+            self._log_completion_summary(paths['processed_surgery_search_data'])
+            self._open_output_folder(paths["output_path"])
 
         except Exception as e:
-            logging.error(f"分析処理中に予期しないエラーが発生: {str(e)}", exc_info=True)
-            self._log_message("\n" + "=" * 60)
-            self._log_message(f"✗ エラーが発生しました: {str(e)}")
-            self._log_message("=" * 60)
-            self.status_var.set(f"エラー: {str(e)}")
-            messagebox.showerror("エラー", f"処理中にエラーが発生しました:\n\n{str(e)}")
+            self._handle_analysis_error(e)
 
         finally:
             self.start_button.config(state=tk.NORMAL)
