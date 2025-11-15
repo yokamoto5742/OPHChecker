@@ -19,7 +19,6 @@ def surgery_error_extractor(comparison_result: str, output_path: str, template_p
     Returns:
         生成されたファイルのパス
     """
-    # CSVファイルを読み込み
     df = pd.read_csv(comparison_result, encoding='cp932')
     comparison_cols = ['入外_比較', '術眼_比較', '手術_比較', '医師_比較', '麻酔_比較']
 
@@ -30,34 +29,27 @@ def surgery_error_extractor(comparison_result: str, output_path: str, template_p
 
     df_errors = df[mask]
 
-    # エラーがない場合は処理を終了
     if len(df_errors) == 0:
         logging.info("不一致および未入力はありませんでした")
         return ""
 
-    # 出力する列を選択
     output_columns = ['手術日', '患者ID', '氏名', '入外', '術眼', '手術', '医師', '麻酔', '術前','入外_比較', '術眼_比較', '手術_比較', '医師_比較', '麻酔_比較']
     df_output = cast(pd.DataFrame, df_errors[output_columns].copy())
 
-    # 出力ディレクトリを作成
     Path(output_path).mkdir(parents=True, exist_ok=True)
 
-    # 現在時刻を含むファイル名を生成
     timestamp = datetime.now().strftime('%Y%m%d_%H%M')
     output_filename = f'眼科手術指示確認{timestamp}.xlsx'
     output_filepath = Path(output_path) / output_filename
 
-    # テンプレートファイルを読み込み
     wb = load_workbook(template_path)
     ws = wb.active
 
-    # データ行を書き込み(ヘッダー行はテンプレートで指定)
     for row_idx, (_, row_data) in enumerate(df_output.iterrows(), start=2):
         for col_idx, value in enumerate(row_data, start=1):
             if ws is not None:
                 ws.cell(row=row_idx, column=col_idx).value = value
 
-    # ファイルとして保存
     wb.save(output_filepath)
 
     logging.info(f"眼科手術指示確認ファイルの作成が完了しました")

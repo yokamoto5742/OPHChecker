@@ -103,18 +103,16 @@ def _create_eye_side_column(df: pd.DataFrame) -> pd.DataFrame:
 
 def _handle_duplicates(df: pd.DataFrame) -> pd.DataFrame:
     """重複レコードを処理"""
-    # 手術日と患者IDで重複を特定
     df['重複'] = df.duplicated(subset=['手術日', '患者ID'], keep=False)
 
-    # 重複している行の術眼をBに変更
+    # 同一患者の同日手術は両眼手術として扱う
     df.loc[df['重複'], '術眼'] = 'B'
 
-    # 重複していて、かつ左列だけに○がある行を削除
+    # 左眼のみの重複レコードを削除（右眼優先）
     result = df[~((df['重複']) & (df['右'] != '○') & (df['左'] == '○'))]
     if isinstance(result, pd.DataFrame):
         df = result
 
-    # 重複列を削除
     df = df.drop(columns=['重複', '右', '左'])
 
     return df

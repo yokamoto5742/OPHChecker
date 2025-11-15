@@ -1,7 +1,7 @@
 ============================================================
 プロジェクト構造: OPHChecker
 パス: C:\Users\yokam\PycharmProjects\OPHChecker
-生成日時: 2025-11-13 14:35:28
+生成日時: 2025-11-15 15:34:44
 ============================================================
 
 └── OPHChecker
@@ -15,6 +15,7 @@
     ├── scripts
     │   ├── __init__.py
     │   ├── project_structure.py
+    │   ├── project_structure.txt
     │   └── version_manager.py
     ├── service
     │   ├── __init__.py
@@ -25,7 +26,8 @@
     ├── utils
     │   ├── config.ini
     │   ├── __init__.py
-    │   └── config_manager.py
+    │   ├── config_manager.py
+    │   └── log_rotation.py
     ├── widgets
     │   ├── __init__.py
     │   ├── exclude_items_dialog.py
