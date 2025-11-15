@@ -1,6 +1,7 @@
 import configparser
 import logging
 import unicodedata
+from typing import cast
 
 import pandas as pd
 
@@ -34,12 +35,15 @@ def _select_required_columns(df: pd.DataFrame) -> pd.DataFrame:
         '手術日', '患者ID', '氏名', '手術', '医師',
         '麻酔', '病名', '入外', '右', '左', '術前'
     ]
-    return df[required_columns].copy()
+    result = df[required_columns].copy()
+    if not isinstance(result, pd.DataFrame):
+        raise TypeError('Expected DataFrame')
+    return result
 
 
 def _convert_surgery_date_format(df: pd.DataFrame) -> pd.DataFrame:
     """手術日をYYYY/MM/DD形式に変換"""
-    df['手術日'] = pd.to_datetime(df['手術日'], format='%y/%m/%d').dt.strftime('%Y/%m/%d')
+    df['手術日'] = pd.to_datetime(df['手術日'], format='%y/%m/%d').dt.strftime('%Y/%m/%d').astype(str)
     return df
 
 
@@ -76,7 +80,9 @@ def _filter_exclusion_keywords(df: pd.DataFrame, config: configparser.ConfigPars
 
     for column in columns_to_filter:
         for keyword in exclusion_line_keywords:
-            df = df[~df[column].str.contains(keyword, na=False)]
+            result = df[~df[column].str.contains(keyword, na=False)]
+            if isinstance(result, pd.DataFrame):
+                df = result
 
     return df
 
@@ -104,7 +110,9 @@ def _handle_duplicates(df: pd.DataFrame) -> pd.DataFrame:
     df.loc[df['重複'], '術眼'] = 'B'
 
     # 重複していて、かつ左列だけに○がある行を削除
-    df = df[~((df['重複']) & (df['右'] != '○') & (df['左'] == '○'))]
+    result = df[~((df['重複']) & (df['右'] != '○') & (df['左'] == '○'))]
+    if isinstance(result, pd.DataFrame):
+        df = result
 
     # 重複列を削除
     df = df.drop(columns=['重複', '右', '左'])
@@ -115,8 +123,8 @@ def _handle_duplicates(df: pd.DataFrame) -> pd.DataFrame:
 def _reorder_and_sort(df: pd.DataFrame) -> pd.DataFrame:
     """列の順番を並び替えてソート"""
     column_order = ['手術日', '患者ID', '氏名', '入外', '術眼', '手術', '医師', '麻酔', '術前']
-    df = df[column_order]
-    df = df.sort_values(by=['手術日', '患者ID'])
+    df = cast(pd.DataFrame, df[column_order])
+    df = cast(pd.DataFrame, df.sort_values(by=['手術日', '患者ID']))
     return df
 
 

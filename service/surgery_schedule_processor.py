@@ -1,5 +1,6 @@
 import logging
 import unicodedata
+from typing import cast
 
 import pandas as pd
 
@@ -21,28 +22,35 @@ def process_surgery_schedule(surgery_schedule: str, processed_surgery_schedule: 
     df_processed = df[required_columns].copy()
 
     # 日付列を文字列形式に変換（YYYY/MM/DD形式）
-    df_processed['日付'] = pd.to_datetime(df_processed['日付']).dt.strftime('%Y/%m/%d')
+    date_series = cast(pd.Series, df_processed['日付'])
+    df_processed['日付'] = pd.to_datetime(date_series).dt.strftime('%Y/%m/%d')
 
     # 術式列の値を全角カナに変換
-    df_processed['術式'] = df_processed['術式'].apply(
+    surgery_series = cast(pd.Series, df_processed['術式'])
+    df_processed['術式'] = surgery_series.apply(
         lambda x: unicodedata.normalize('NFKC', str(x)) if pd.notna(x) else x
     )
 
     # 術式列を ')' で分割して術眼列と手術列を作成
-    df_processed[['術眼', '手術']] = df_processed['術式'].str.split(')', n=1, expand=True)
-    df_processed['手術'] = df_processed['手術'].str.strip()  # 前後の空白を削除
+    split_series = cast(pd.Series, df_processed['術式'])
+    df_processed[['術眼', '手術']] = split_series.str.split(')', n=1, expand=True)
+    hand_series = cast(pd.Series, df_processed['手術'])
+    df_processed['手術'] = hand_series.str.strip()  # 前後の空白を削除
 
     # 術式列を削除
     df_processed = df_processed.drop(columns=['術式'])
 
     # 列名を変更
-    df_processed = df_processed.rename(columns={'日付': '手術日', 'ID': '患者ID', '術者': '医師',})
+    rename_mapping = {'日付': '手術日', 'ID': '患者ID', '術者': '医師'}
+    result = df_processed.rename(columns=rename_mapping)  # type: ignore[call-overload]
+    if isinstance(result, pd.DataFrame):
+        df_processed = result
 
     # 列の順番を並び替え
-    df_processed = df_processed[['手術日', '患者ID', '氏名', '入外', '術眼', '手術', '医師', '麻酔']]
+    df_processed = cast(pd.DataFrame, df_processed[['手術日', '患者ID', '氏名', '入外', '術眼', '手術', '医師', '麻酔']])
 
     # 手術日と患者IDで昇順にソート
-    df_processed = df_processed.sort_values(by=['手術日', '患者ID'])
+    df_processed = cast(pd.DataFrame, df_processed.sort_values(by=['手術日', '患者ID']))
 
     # CSVファイルとして保存
     df_processed.to_csv(processed_surgery_schedule, index=False, encoding='cp932')

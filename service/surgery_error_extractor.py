@@ -1,6 +1,7 @@
 import logging
 from datetime import datetime
 from pathlib import Path
+from typing import cast
 
 import pandas as pd
 from openpyxl import load_workbook
@@ -36,7 +37,7 @@ def surgery_error_extractor(comparison_result: str, output_path: str, template_p
 
     # 出力する列を選択
     output_columns = ['手術日', '患者ID', '氏名', '入外', '術眼', '手術', '医師', '麻酔', '術前','入外_比較', '術眼_比較', '手術_比較', '医師_比較', '麻酔_比較']
-    df_output = df_errors[output_columns]
+    df_output = cast(pd.DataFrame, df_errors[output_columns].copy())
 
     # 出力ディレクトリを作成
     Path(output_path).mkdir(parents=True, exist_ok=True)
@@ -51,9 +52,10 @@ def surgery_error_extractor(comparison_result: str, output_path: str, template_p
     ws = wb.active
 
     # データ行を書き込み(ヘッダー行はテンプレートで指定)
-    for row_idx, row_data in enumerate(df_output.values, start=2):
+    for row_idx, (_, row_data) in enumerate(df_output.iterrows(), start=2):
         for col_idx, value in enumerate(row_data, start=1):
-            ws.cell(row=row_idx, column=col_idx, value=value)
+            if ws is not None:
+                ws.cell(row=row_idx, column=col_idx).value = value
 
     # ファイルとして保存
     wb.save(output_filepath)
