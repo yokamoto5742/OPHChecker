@@ -34,7 +34,6 @@ class ExcludeItemsDialog:
         notebook.add(surgery_frame, text="手術文字列削除")
         self._setup_surgery_tab(surgery_frame)
 
-        # ボタンフレーム
         button_frame = tk.Frame(self.dialog)
         button_frame.pack(fill=tk.X, padx=10, pady=10)
 
@@ -65,7 +64,6 @@ class ExcludeItemsDialog:
         cancel_button.pack(side=tk.LEFT, padx=5)
 
     def _setup_keywords_tab(self, parent: tk.Frame) -> None:
-        # 説明ラベル
         description = tk.Label(
             parent,
             text="以下のキーワードを含む行は除外されます",
@@ -74,7 +72,6 @@ class ExcludeItemsDialog:
         )
         description.pack(fill=tk.X, padx=10, pady=(10, 5))
 
-        # リストボックスとスクロールバー
         list_frame = tk.Frame(parent)
         list_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
 
@@ -93,7 +90,6 @@ class ExcludeItemsDialog:
         for keyword in self.exclusion_line_keywords:
             self.keywords_listbox.insert(tk.END, keyword)
 
-        # ボタンフレーム
         btn_frame = tk.Frame(parent)
         btn_frame.pack(fill=tk.X, padx=10, pady=5)
 
@@ -134,7 +130,6 @@ class ExcludeItemsDialog:
         )
         description.pack(fill=tk.X, padx=10, pady=(10, 5))
 
-        # リストボックスとスクロールバー
         list_frame = tk.Frame(parent)
         list_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
 
@@ -153,7 +148,6 @@ class ExcludeItemsDialog:
         for string in self.surgery_strings_to_remove:
             self.surgery_listbox.insert(tk.END, string)
 
-        # ボタンフレーム
         btn_frame = tk.Frame(parent)
         btn_frame.pack(fill=tk.X, padx=10, pady=5)
 

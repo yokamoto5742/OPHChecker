@@ -69,7 +69,6 @@ class ReplacementsDialog:
         cancel_button.pack(side=tk.LEFT, padx=5)
 
     def _setup_replacements_tab(self, parent: tk.Frame, replacements_dict: dict[str, str], tab_type: str) -> None:
-        # 説明ラベル
         description = tk.Label(
             parent,
             text="置換前 → 置換後",
@@ -78,7 +77,6 @@ class ReplacementsDialog:
         )
         description.pack(fill=tk.X, padx=10, pady=(10, 5))
 
-        # リストボックスとスクロールバー
         list_frame = tk.Frame(parent)
         list_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
 
@@ -94,11 +92,9 @@ class ReplacementsDialog:
         listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         scrollbar.config(command=listbox.yview)
 
-        # リストボックスにデータを追加
         for key, value in replacements_dict.items():
             listbox.insert(tk.END, f"{key} → {value}")
 
-        # リストボックスを保存
         if tab_type == "anesthesia":
             self.anesthesia_listbox = listbox
         elif tab_type == "surgeon":
@@ -142,7 +138,6 @@ class ReplacementsDialog:
         dialog.transient(self.dialog)
         dialog.grab_set()
 
-        # 置換前
         label1 = tk.Label(dialog, text="置換前:", font=("Arial", self.font_size))
         label1.pack(padx=20, pady=(20, 5))
 
@@ -150,7 +145,6 @@ class ReplacementsDialog:
         entry_key.pack(padx=20, pady=5)
         entry_key.focus_set()
 
-        # 置換後
         label2 = tk.Label(dialog, text="置換後:", font=("Arial", self.font_size))
         label2.pack(padx=20, pady=(10, 5))
 
@@ -211,7 +205,6 @@ class ReplacementsDialog:
         dialog.transient(self.dialog)
         dialog.grab_set()
 
-        # 置換前
         label1 = tk.Label(dialog, text="置換前:", font=("Arial", self.font_size))
         label1.pack(padx=20, pady=(20, 5))
 
@@ -221,7 +214,6 @@ class ReplacementsDialog:
         entry_key.focus_set()
         entry_key.select_range(0, tk.END)
 
-        # 置換後
         label2 = tk.Label(dialog, text="置換後:", font=("Arial", self.font_size))
         label2.pack(padx=20, pady=(10, 5))
 
@@ -238,12 +230,9 @@ class ReplacementsDialog:
                     messagebox.showwarning("警告", "同じ値が既に存在します", parent=dialog)
                     return
 
-                # 古いキーを削除
                 del replacements_dict[current_key]
-                # 新しいキーと値を追加
                 replacements_dict[new_key] = new_value
 
-                # リストボックスを更新
                 listbox.delete(index)
                 listbox.insert(index, f"{new_key} → {new_value}")
                 listbox.selection_set(index)
