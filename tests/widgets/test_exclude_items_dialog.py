@@ -23,7 +23,7 @@ def test_exclude_items_dialog_init(root):
     keywords = ['キーワード1', 'キーワード2']
     strings = ['文字列1', '文字列2']
 
-    dialog = ExcludeItemsDialog(root, keywords, strings, font_size=11)
+    dialog = ExcludeItemsDialog(root, keywords, strings)
 
     assert dialog.parent == root
     assert dialog.exclusion_line_keywords == keywords

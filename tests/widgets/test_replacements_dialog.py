@@ -1,5 +1,5 @@
 import tkinter as tk
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -24,7 +24,7 @@ def test_replacements_dialog_init(root):
     surgeon = {'橋本義弘': '橋本'}
     inpatient = {'あやめ': '入院'}
 
-    dialog = ReplacementsDialog(root, anesthesia, surgeon, inpatient, font_size=11)
+    dialog = ReplacementsDialog(root, anesthesia, surgeon, inpatient)
 
     assert dialog.parent == root
     assert dialog.anesthesia_replacements == anesthesia

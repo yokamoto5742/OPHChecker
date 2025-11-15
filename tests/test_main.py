@@ -118,7 +118,7 @@ def test_main_calls_mainloop(mock_tk, mock_load_config, mock_setup_logging, mock
     mock_root.mainloop.assert_called_once()
 
 
-def test_main_execution_order(mock_tk, mock_load_config, mock_setup_logging, mock_gui):
+def test_main_execution_order(mock_tk, mock_load_config, mock_setup_logging, mock_gui, mock_config):
     """メイン処理の実行順序が正しい"""
     mock_tk_module, mock_root = mock_tk
     call_order = []

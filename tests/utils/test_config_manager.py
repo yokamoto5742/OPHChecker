@@ -1,16 +1,13 @@
 import configparser
 import os
 import tempfile
-from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
 from utils.config_manager import (
-    DEFAULT_CONFIG,
     get_appearance_settings,
     get_dialog_settings,
-    get_exclude_items,
     get_exclusion_line_keywords,
     get_paths,
     get_replacement_dict,
