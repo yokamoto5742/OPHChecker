@@ -24,3 +24,4 @@ six==1.17.0
 typing_extensions==4.15.0
 tzdata==2025.2
 uv==0.9.7
+xlrd==2.0.2
