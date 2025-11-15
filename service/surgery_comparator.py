@@ -9,10 +9,10 @@ def compare_surgery_data(
         comparison_result: str
 ) -> None:
     """
-    手術検索データと手術予定表を比較してCSV形式で出力
+    眼科手術検索データと手術予定表を比較してCSV形式で出力
 
     Args:
-        processed_surgery_search_data: 手術検索データのCSVファイルパス（基準）
+        processed_surgery_search_data: 眼科手術検索データのCSVファイルパス（基準）
         processed_surgery_schedule: 手術予定表のCSVファイルパス（比較対象）
         comparison_result: 比較結果を出力するCSVファイルパス
     """
