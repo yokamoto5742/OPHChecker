@@ -3,19 +3,18 @@
 このファイルは、OPHCheckerプロジェクトにおけるすべての重要な変更を記録します。
 フォーマットは [Keep a Changelog](https://keepachangelog.com/ja/1.1.0/) に基づいています。
 
-## [Unreleased]
+## [1.0.1] - 2025-11-16
 
 ### 追加
-- TKinterによるGUIアプリケーション(gui.py)を追加
-- 分析開始ボタン: 手術予定表処理、眼科システムデータ処理、データ比較を順序実行
-- 設定ボタン: config.iniファイルをエディタで開く
-- 実行ログ表示とステータスバーを追加
-- 手術予定表処理で術式列を全角カナに変換する機能を追加
+- pandas-stubsを依存関係に追加し、型チェックの精度を向上
 
 ### 変更
-- surgery_schedule_processor.py: ハードコードされたファイルパスをconfig.iniから読み込むように変更
-- config_manager.py: processed_surgery_scheduleパスキーを追加
+- プロダクト名を「眼科手術指示確認」に更新（build.py、app/__init__.py、app/main_window.py）
+- ウィンドウタイトルとログメッセージを新しいプロダクト名に更新
 
 ### 修正
+- 設定ファイルのパスを修正し、環境依存性を解消
+- surgery_schedule_processor.pyに型ヒントを追加し、コードの型安全性を向上
 
-### 削除
+### 改善
+- パース処理ロジックを改善し、データ処理の精度を向上させる新しいパースロジックを追加
