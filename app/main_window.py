@@ -32,11 +32,11 @@ from widgets.replacements_dialog import ReplacementsDialog
 class OPHCheckerGUI:
     def __init__(self, root: tk.Tk) -> None:
         self.root = root
-        self.root.title(f"OPHChecker v{__version__}")
+        self.root.title(f"眼科手術指示確認 v{__version__}")
         self.config = load_config()
         self._apply_appearance_settings()
         self._setup_ui()
-        logging.info(f"OPHChecker v{__version__} を起動しました")
+        logging.info(f"眼科手術指示確認 v{__version__} を起動しました")
 
     def _apply_appearance_settings(self) -> None:
         appearance = get_appearance_settings(self.config)

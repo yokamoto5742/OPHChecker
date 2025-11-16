@@ -7,7 +7,7 @@ def build_executable():
     new_version = update_version()
     subprocess.run([
         "pyinstaller",
-        "--name=OPHChecker",
+        "--name=眼科手術指示確認",
         "--windowed",
         "--icon=assets/OPHChecker.ico",
         "--add-data", "utils/config.ini:.",
