@@ -48,6 +48,15 @@ def surgery_error_extractor(comparison_result: str, output_path: str, template_p
     for row_idx, (_, row_data) in enumerate(df_output.iterrows(), start=2):
         for col_idx, value in enumerate(row_data, start=1):
             if ws is not None:
+                # 手術日列（1列目）の場合、datetimeオブジェクトに変換
+                if col_idx == 1 and pd.notna(value):
+                    try:
+                        # 文字列をdatetimeオブジェクトに変換
+                        value = datetime.strptime(str(value), '%Y/%m/%d')
+                    except (ValueError, TypeError):
+                        # 変換できない場合はそのまま設定
+                        pass
+                
                 ws.cell(row=row_idx, column=col_idx).value = value
 
     wb.save(output_filepath)
