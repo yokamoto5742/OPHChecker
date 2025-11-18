@@ -59,7 +59,7 @@ def test_oph_checker_gui_window_title(root, mock_config):
         with patch('app.main_window.__version__', '1.0.0'):
             gui = OPHCheckerGUI(root)
 
-            assert 'OPHChecker v1.0.0' in root.title()
+            assert '眼科手術指示確認 v1.0.0' in root.title()
 
 
 def test_oph_checker_gui_log_message(root, mock_config):
