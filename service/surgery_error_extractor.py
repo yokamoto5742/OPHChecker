@@ -54,7 +54,13 @@ def surgery_error_extractor(comparison_result: str, output_path: str, template_p
                         value = datetime.strptime(str(value), '%Y/%m/%d')
                     except (ValueError, TypeError):
                         pass
-                
+
+                # 比較列のTrue/Falseを一致/不一致に変換
+                if value is True:
+                    value = '一致'
+                elif value is False:
+                    value = '不一致'
+
                 ws.cell(row=row_idx, column=col_idx).value = value
 
     wb.save(output_filepath)
