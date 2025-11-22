@@ -1,13 +1,13 @@
 import configparser
 import logging
 import os
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 
 
 def cleanup_old_files(config: configparser.ConfigParser) -> None:
     """
-    設定ファイルの内容に基づいて、古いファイルを削除する
+    設定ファイルの内容に基づき古いファイルを削除する
 
     Args:
         config: 設定ファイルオブジェクト
