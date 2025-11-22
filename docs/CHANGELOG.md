@@ -3,6 +3,28 @@
 このファイルは、OPHCheckerプロジェクトにおけるすべての重要な変更を記録します。
 フォーマットは [Keep a Changelog](https://keepachangelog.com/ja/1.1.0/) に基づいています。
 
+## [1.0.4] - 2025-11-22
+
+### 追加
+- excludeitems.txt、replacements.txtの外部設定ファイルをサポート
+  - 除外項目・置換項目の設定を独立したファイルで管理可能に
+  - config.iniから外部ファイルのパスを参照可能
+
+### 変更
+- config_manager.pyの機能拡張
+  - `_load_exclude_items_config()`でexcludeitems.txtから除外項目設定を読み込み
+  - `_load_replacements_config()`でreplacements.txtから置換項目設定を読み込み
+  - `_save_exclude_items_config()`で除外項目設定をファイルに保存
+  - `_save_replacements_config()`で置換項目設定をファイルに保存
+  - 設定ファイルの構造を改善し、複数ファイルからの設定読み込みに対応
+- config.iniの設定項目
+  - ExcludeItemsセクションに詳細な除外キーワードと除外文字列を追加
+  - Pathsセクションにexcludeitems_file、replacements_fileパスを追加
+  - 
+### 技術的な改善
+- プロジェクト構造を整理
+  - scripts/project_structure.txtを更新し、プロジェクトの構造をドキュメント化
+
 ## [1.0.3] - 2025-11-22
 
 ### 変更

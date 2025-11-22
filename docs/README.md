@@ -9,7 +9,7 @@
 - **手術データ比較**: 手術予定表と眼科手術検索データの突合、差分確認
 - **エラー抽出・レポート**: 不正なレコードを自動検出し、Excel レポート生成
 
-**現在のバージョン**: 1.0.3
+**現在のバージョン**: 1.0.4
 **最終更新日**: 2025年11月22日
 
 ## システム要件
@@ -20,7 +20,7 @@
 
 ### 必須ライブラリ
 
-- pandas (1.5.3) - データ処理
+- pandas (1.5.3) - データ処理(32bit版対応)
 - openpyxl (3.1.5) - Excel ファイル操作
 
 詳細は `requirements.txt` を参照してください。
@@ -100,58 +100,83 @@ from service.surgery_error_extractor import surgery_error_extractor
 surgery_error_extractor('比較結果.csv', '出力ディレクトリ', 'テンプレート.xlsx')
 ```
 
-### CLI から実行
+### GUI で実行
 
 ```bash
 python main.py
 ```
 
+GUI アプリケーションが起動し、各処理をダイアログ形式で実行できます。
+
 ## プロジェクト構造
 
 ```
 OPHChecker/
-├── app/
-│   ├── __init__.py              # バージョン・日付管理
-│   └── main_window.py           # メイン画面UI
+├── app/                              # アプリケーション UI・メインロジック
+│   ├── __init__.py                   # バージョン・日付管理
+│   └── main_window.py                # メイン画面 GUI
 │
-├── assets/                       # アプリケーションリソース
-│   ├── OPHChecker.ico           # アイコンファイル
-│   └── OPHChecker.png           # 画像ファイル
+├── assets/                            # アプリケーションリソース
+│   ├── OPHChecker.ico                # アイコンファイル
+│   └── OPHChecker.png                # 画像ファイル
 │
-├── service/                      # データ処理サービス層
-│   ├── surgery_schedule_processor.py    # Excel手術予定処理
-│   ├── surgery_search_processor.py      # CSV眼科データクリーニング
-│   ├── surgery_comparator.py            # データ突合比較
-│   ├── surgery_error_extractor.py       # エラーレコード抽出・レポート
+├── service/                           # データ処理サービス層
+│   ├── surgery_schedule_processor.py  # Excel手術予定処理
+│   ├── surgery_search_processor.py    # CSV眼科データクリーニング
+│   ├── surgery_comparator.py          # データ突合比較
+│   ├── surgery_error_extractor.py     # エラーレコード抽出・レポート
 │   └── __init__.py
 │
-├── utils/                        # ユーティリティ・設定管理
-│   ├── config_manager.py        # 設定読込・保存
-│   ├── config.ini               # 設定ファイル
-│   ├── log_rotation.py          # ログローテーション管理
+├── utils/                             # ユーティリティ・設定管理
+│   ├── config_manager.py             # 設定読込・保存
+│   ├── config.ini                    # 設定ファイル
+│   ├── file_cleaner.py               # 古いファイル削除管理
+│   ├── log_rotation.py               # ログローテーション管理
+│   ├── excludeitems.txt              # 除外項目一覧 (テキスト形式)
+│   ├── replacements.txt              # 置換項目一覧 (テキスト形式)
 │   └── __init__.py
 │
-├── widgets/                      # UI コンポーネント
-│   ├── exclude_items_dialog.py  # 除外項目設定ダイアログ
-│   ├── replacements_dialog.py   # 置換設定ダイアログ
+├── widgets/                           # UI コンポーネント
+│   ├── exclude_items_dialog.py       # 除外項目設定ダイアログ
+│   ├── replacements_dialog.py        # 置換設定ダイアログ
 │   └── __init__.py
 │
-├── tests/                        # テストスイート
-│
-├── scripts/
-│   ├── version_manager.py       # バージョン・日付自動更新
+├── tests/                             # テストスイート
+│   ├── test_main.py                  # メインテスト
+│   ├── app/                          # UI テスト
+│   │   ├── test_main_window.py
+│   │   └── __init__.py
+│   ├── service/                      # サービス層テスト
+│   │   ├── test_surgery_schedule_processor.py
+│   │   ├── test_surgery_search_processor.py
+│   │   ├── test_surgery_comparator.py
+│   │   ├── test_surgery_error_extractor.py
+│   │   └── __init__.py
+│   ├── utils/                        # ユーティリティテスト
+│   │   ├── test_config_manager.py
+│   │   ├── test_file_cleaner.py
+│   │   ├── test_log_rotation.py
+│   │   └── __init__.py
+│   ├── widgets/                      # UI コンポーネントテスト
+│   │   ├── test_exclude_items_dialog.py
+│   │   ├── test_replacements_dialog.py
+│   │   └── __init__.py
 │   └── __init__.py
 │
-├── docs/
-│   ├── README.md                # 本ファイル
-│   ├── CHANGELOG.md             # 変更履歴
+├── scripts/                           # ビルド・バージョン管理
+│   ├── version_manager.py            # バージョン・日付自動更新
+│   └── __init__.py
+│
+├── docs/                              # ドキュメント
+│   ├── README.md                     # 本ファイル
+│   ├── CHANGELOG.md                  # 変更履歴
 │   └── LICENSE
 │
-├── main.py                       # アプリケーション エントリーポイント
-├── build.py                      # PyInstaller ビルドスクリプト
-├── requirements.txt              # Python 依存パッケージ
-├── pyrightconfig.json            # 型チェック設定
-├── CLAUDE.md                     # 開発ガイドライン
+├── main.py                            # アプリケーション エントリーポイント
+├── build.py                           # PyInstaller ビルドスクリプト
+├── requirements.txt                   # Python 依存パッケージ
+├── pyrightconfig.json                 # 型チェック設定
+├── CLAUDE.md                          # 開発ガイドライン
 └── .gitignore
 ```
 
@@ -241,6 +266,23 @@ surgery_error_extractor('comparison.csv', 'output/', 'template.xlsx')
 - `get_surgery_strings_to_remove()`: 削除対象術式文字列を取得
 - `get_replacement_dict()`: 置換辞書を取得
 
+### log_rotation.py
+
+ログファイルのセットアップとローテーション管理を行います。
+
+**主要関数**:
+- `setup_logging()`: ロギングの初期化
+- ログは `utils/logs/` ディレクトリに出力
+- 保持期間設定: `config.ini` の `log_retention_days` で制御
+
+### file_cleaner.py
+
+古いファイル（ログ、出力ファイルなど）の自動削除を管理します。
+
+**主要関数**:
+- `cleanup_old_files()`: 古いファイルを削除
+- 削除対象は `config.ini` で設定可能
+
 ## 設定ファイル (config.ini)
 
 ### [Appearance]
@@ -314,6 +356,10 @@ python -m pytest tests/ -v --cov
 
 # 特定のテストファイルを実行
 python -m pytest tests/test_main.py -v
+
+# 特定のモジュールのテストを実行
+python -m pytest tests/service/ -v
+python -m pytest tests/utils/ -v
 ```
 
 ### 型チェック
@@ -350,31 +396,6 @@ def process_data(input_file: str, output_file: str) -> None:
     df = pd.read_csv(input_file, encoding='cp932')
     # ...
     df.to_csv(output_file, encoding='cp932', index=False)
-```
-
-### インポート順序
-
-標準ライブラリ → サードパーティ → カスタムモジュール (各グループで alphabetical)
-
-```python
-import sys
-from configparser import ConfigParser
-from pathlib import Path
-
-import pandas as pd
-from openpyxl import load_workbook
-
-from utils.config_manager import load_config
-```
-
-### 日本語コメント
-
-分かりにくいロジックのみ日本語でコメント。末尾のピリオド・句点は不要です。
-
-```python
-def _convert_surgery_date_format(row: pd.Series) -> str:
-    # 手術日を標準形式に変換
-    return row['date'].strftime('%Y年%m月%d日')
 ```
 
 ### ファイルエンコーディング
