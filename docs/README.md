@@ -1,13 +1,13 @@
-# OPHChecker 
+# OPHChecker
 
 眼科手術データ処理用の Python アプリケーション。手術予定、検索データ、エラーデータを一元的に処理し、データ品質を確保します。
 
 ## 主な機能
 
-- **手術予定表変換**: ExcelファイルをCSV形式に変換し、統一されたカラム構造に整形
-- **眼科手術検索データ変換**: CSVファイルを変換し、統一されたカラム構造に整形
+- **手術予定表変換**: Excel ファイルを CSV 形式に変換し、統一されたカラム構造に整形
+- **眼科手術検索データ変換**: CSV ファイルを変換し、統一されたカラム構造に整形
 - **手術データ比較**: 手術予定表と眼科手術検索データの突合、差分確認
-- **エラー抽出・レポート**: 不正なレコードを自動検出し、Excelレポート生成
+- **エラー抽出・レポート**: 不正なレコードを自動検出し、Excel レポート生成
 
 **現在のバージョン**: 1.0.3
 **最終更新日**: 2025年11月22日
@@ -22,6 +22,8 @@
 
 - pandas (1.5.3) - データ処理
 - openpyxl (3.1.5) - Excel ファイル操作
+
+詳細は `requirements.txt` を参照してください。
 
 ## セットアップ手順
 
@@ -48,10 +50,9 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-### 4. 設定ファイルを準備
+### 4. 設定ファイルを確認
 
-`utils/config.ini` に手術データファイルのパスを設定します。
-実際の環境に合わせて、パスを修正してください。
+`utils/config.ini` に手術データファイルのパスを設定します。実際の環境に合わせてパスを修正してください。
 
 ### 5. インストール確認
 
@@ -71,54 +72,32 @@ python -m pytest tests/ -v
 
 ```python
 from service.surgery_schedule_processor import process_surgery_schedule
-from utils.config_manager import load_config
 
-config = load_config()
-input_file = config['Paths']['surgery_schedule']
-output_file = config['Paths']['processed_surgery_schedule']
-
-process_surgery_schedule(input_file, output_file)
+process_surgery_schedule('入力.xls', '出力.csv')
 ```
 
 #### 2. 眼科手術検索データクリーニング
 
 ```python
 from service.surgery_search_processor import process_eye_surgery_data
-from utils.config_manager import load_config
 
-config = load_config()
-input_file = config['Paths']['surgery_search_data']
-output_file = config['Paths']['processed_surgery_search_data']
-
-process_eye_surgery_data(input_file, output_file)
+process_eye_surgery_data('入力.csv', '出力.csv')
 ```
 
 #### 3. 手術データ比較
 
 ```python
 from service.surgery_comparator import compare_surgery_data
-from utils.config_manager import load_config
 
-config = load_config()
-schedule_file = config['Paths']['processed_surgery_schedule']
-search_file = config['Paths']['processed_surgery_search_data']
-output_file = config['Paths']['comparison_result']
-
-compare_surgery_data(schedule_file, search_file, output_file)
+compare_surgery_data('検索データ.csv', '予定表.csv', '比較結果.csv')
 ```
 
 #### 4. エラーデータ抽出
 
 ```python
 from service.surgery_error_extractor import surgery_error_extractor
-from utils.config_manager import load_config
 
-config = load_config()
-input_file = config['Paths']['comparison_result']
-output_file = config['Paths']['output_path'] + '\errors.xlsx'
-template_file = config['Paths']['template_path']
-
-surgery_error_extractor(input_file, output_file, template_file)
+surgery_error_extractor('比較結果.csv', '出力ディレクトリ', 'テンプレート.xlsx')
 ```
 
 ### CLI から実行
@@ -161,8 +140,6 @@ OPHChecker/
 │
 ├── scripts/
 │   ├── version_manager.py       # バージョン・日付自動更新
-│   ├── project_structure.py     # プロジェクト構造出力スクリプト
-│   ├── project_structure.txt    # 構造出力結果
 │   └── __init__.py
 │
 ├── docs/
@@ -182,32 +159,33 @@ OPHChecker/
 
 ### surgery_schedule_processor.py
 
-Excel形式の手術予定(`手術予定表.xls`)を CSV形式に変換します。
+Excel 形式の手術予定表を CSV 形式に変換します。
 
-**機能**:
+**処理内容**:
 - 手術日時の解析・変換
 - 患者情報の正規化
 - 術式・医師名の統一
+- 左右眼別の術式分割
 
 **使用例**:
 ```python
 from service.surgery_schedule_processor import process_surgery_schedule
 
-process_surgery_schedule('input.xls', 'output.csv')
+process_surgery_schedule('手術予定表.xls', 'output.csv', sheet_name='南眼2')
 ```
 
 ### surgery_search_processor.py
 
-眼科システムから出力された CSV(`眼科システム手術検索.csv`)を清掃・標準化します。
+眼科システムから出力された CSV を清掃・標準化します。複数のヘルパー関数で段階的にデータを処理します。
 
 **主要処理**:
 - `_select_required_columns()`: 必須カラムのみ抽出
-- `_create_eye_side_column()`: 左右眼別カラム生成
+- `_convert_surgery_date_format()`: 日付形式統一
 - `_apply_replacements()`: 麻酔・入院・医師名の標準化
 - `_remove_surgery_strings()`: 不要な術式情報削除
 - `_filter_exclusion_keywords()`: 除外キーワード行を削除
 - `_normalize_surgery_text()`: 術式テキスト正規化
-- `_convert_surgery_date_format()`: 日付形式統一
+- `_create_eye_side_column()`: 左右眼別カラム生成
 - `_handle_duplicates()`: 重複レコード処理
 - `_reorder_and_sort()`: カラム並び替え・ソート
 
@@ -215,44 +193,45 @@ process_surgery_schedule('input.xls', 'output.csv')
 ```python
 from service.surgery_search_processor import process_eye_surgery_data
 
-process_eye_surgery_data('input.csv', 'output.csv')
+process_eye_surgery_data('眼科システム手術検索.csv', 'processed_search.csv')
 ```
 
 ### surgery_comparator.py
 
-手術予定データと眼科手術検索データを突き合わせて差分を確認し、レポートを生成します。
+手術予定データと眼科手術検索データを突き合わせて差分を確認します。
 
-**機能**:
-- 2つのデータセット間の差分抽出
-- 一致・不一致レコードの分類
+**処理内容**:
+- 2 つのデータセット間の差分抽出
+- 入院/術式/医師/麻酔の一致判定
+- 予定未入力レコード検出
 - 比較結果を CSV で出力
 
 **使用例**:
 ```python
 from service.surgery_comparator import compare_surgery_data
 
-compare_surgery_data('schedule.csv', 'search.csv', 'result.csv')
+compare_surgery_data('processed_search.csv', 'processed_schedule.csv', 'comparison.csv')
 ```
 
 ### surgery_error_extractor.py
 
-エラー・不正なレコードを検出し、Excelレポート(`眼科手術指示確認.xlsx`)を生成します。
+比較結果から不正・不一致レコードを抽出し、Excel レポートを生成します。
 
-**機能**:
-- 比較結果から不正レコード抽出
+**処理内容**:
+- FALSE または「未入力」を含むレコード抽出
 - Template Excel ファイルにデータを書き込み
-- エラー情報の可視化
+- タイムスタンプ付きレポート生成
 
 **使用例**:
 ```python
 from service.surgery_error_extractor import surgery_error_extractor
 
-surgery_error_extractor('input.csv', 'output.xlsx', 'template.xlsx')
+surgery_error_extractor('comparison.csv', 'output/', 'template.xlsx')
 ```
 
 ### config_manager.py
 
-設定ファイル(`config.ini`)の読込・保存・管理を行います。
+設定ファイル (`config.ini`) の読込・保存・管理を行います。PyInstaller でビルドした実行ファイルでも、通常の Python 実行でも、正しく config.ini を読み込めます。
 
 **主要関数**:
 - `load_config()`: config.ini から設定を読み込む
@@ -261,21 +240,6 @@ surgery_error_extractor('input.csv', 'output.xlsx', 'template.xlsx')
 - `get_exclusion_line_keywords()`: 除外キーワード一覧を取得
 - `get_surgery_strings_to_remove()`: 削除対象術式文字列を取得
 - `get_replacement_dict()`: 置換辞書を取得
-
-PyInstaller でビルドした実行ファイル(`sys.frozen`)でも、通常の Python 実行でも、正しく config.ini を読み込めます。
-
-**使用例**:
-```python
-from utils.config_manager import load_config, save_config
-
-config = load_config()
-paths = config['Paths']
-input_path = paths['surgery_search_data']
-
-# 設定を修正して保存
-config.set('Logging', 'log_level', 'DEBUG')
-save_config(config)
-```
 
 ## 設定ファイル (config.ini)
 
@@ -304,8 +268,8 @@ folder_dialog_height = 200        # フォルダ選択ダイアログ高さ
 除外キーワード・削除対象文字列の設定 (カンマ区切り)
 
 ```ini
-exclusion_line_keywords = ★,霰粒腫,術式未定,先天性鼻涙管閉塞開放術,新患,ブジー
-surgery_strings_to_remove = (クラレオントーリック),(クラレオンパンオプティクス),(クラレオンパンオプティクストーリック)
+exclusion_line_keywords = ★,霰粒腫,術式未定,先天性鼻涙管閉塞開放術
+surgery_strings_to_remove = (クラレオントーリック),(クラレオンパンオプティクス)
 ```
 
 ### [LOGGING]
@@ -325,10 +289,10 @@ log_level = INFO                  # ログレベル
 ```ini
 input_path = C:\Shinseikai\OPHChecker\input
 surgery_search_data = C:\Shinseikai\OPHChecker\input\眼科システム手術検索.csv
-processed_surgery_search_data = C:\Shinseikai\OPHChecker\processed\processed_surgery_search.csv
+processed_surgery_search_data = C:\Shinseikai\OPHChecker\processed\processed_search.csv
 surgery_schedule = C:\Shinseikai\OPHChecker\input\手術予定表.xls
-processed_surgery_schedule = C:\Shinseikai\OPHChecker\processed\processed_surgery_schedule.csv
-comparison_result = C:\Shinseikai\OPHChecker\processed\comparison_result.csv
+processed_surgery_schedule = C:\Shinseikai\OPHChecker\processed\processed_schedule.csv
+comparison_result = C:\Shinseikai\OPHChecker\processed\comparison.csv
 template_path = C:\Shinseikai\OPHChecker\眼科手術指示確認.xlsx
 output_path = C:\Shinseikai\OPHChecker\output
 ```
@@ -337,7 +301,7 @@ output_path = C:\Shinseikai\OPHChecker\output
 
 データ標準化用の置換辞書 (オリジナル値:統一値)
 
-## 開発コマンド
+## 開発方法
 
 ### テスト実行
 
@@ -369,33 +333,19 @@ python build.py
 python -c "from scripts.version_manager import update_version; update_version()"
 ```
 
-#### ビルド処理について
-
-`build.py` を実行すると:
-1. `scripts/version_manager.py` の `update_version()` が呼ばれます
-2. バージョン番号を自動インクリメント (セマンティックバージョニング準拠)
-3. `app/__init__.py` の `__version__` と `__date__` を更新
-4. `docs/README.md` のバージョン・日付も同期更新
-5. PyInstaller でスタンドアロン実行ファイルを生成
-
-生成ファイル: `dist/OPHChecker.exe`
-
-### 依存パッケージ
-
-主要パッケージ一覧は `requirements.txt` を参照してください。
+**ビルド処理の流れ**:
+1. `scripts/version_manager.py` が呼ばれてバージョンを自動インクリメント
+2. `app/__init__.py` の `__version__` と `__date__` を更新
+3. `docs/README.md` のバージョン・日付も同期更新
+4. PyInstaller でスタンドアロン実行ファイルを生成 (`dist/眼科手術指示確認.exe`)
 
 ## コード規約
 
 ### 型ヒント
 
-- すべての関数パラメータに型ヒント必須
-- すべての関数の戻り値に型ヒント必須
-- Pyright 設定: `standard` モード, Python 3.12
+すべての関数パラメータと戻り値に型ヒント必須です。Pyright は `standard` モード、Python 3.12 で動作します。
 
 ```python
-from typing import Optional
-import pandas as pd
-
 def process_data(input_file: str, output_file: str) -> None:
     df = pd.read_csv(input_file, encoding='cp932')
     # ...
@@ -415,12 +365,11 @@ import pandas as pd
 from openpyxl import load_workbook
 
 from utils.config_manager import load_config
-from service.surgery_search_processor import process_eye_surgery_data
 ```
 
 ### 日本語コメント
 
-分かりにくいロジックのみ日本語でコメント。末尾のピリオド・句点は不要。
+分かりにくいロジックのみ日本語でコメント。末尾のピリオド・句点は不要です。
 
 ```python
 def _convert_surgery_date_format(row: pd.Series) -> str:
@@ -458,13 +407,7 @@ df.to_csv('output.csv', encoding='cp932', index=False)
 
 **原因**: PyInstaller で `--add-data` オプションを指定していない
 
-**解決策**: `build.py` で config.ini を bundling するよう設定
-
-```python
-"--add-data", "utils/config.ini:.",
-```
-
-`config_manager.py` は `sys.frozen` を検出して `sys._MEIPASS` からファイルを読み込みます。
+**解決策**: `build.py` で config.ini を bundling するよう設定。`config_manager.py` は `sys.frozen` を検出して `sys._MEIPASS` からファイルを読み込みます。
 
 ### テスト実行時にモジュールが見つからない
 
@@ -479,7 +422,7 @@ python -m pytest tests/ -v
 
 ## 注意事項
 
-### ファイルパスについて
+### ファイルパス
 
 - デフォルト設定では `C:\Shinseikai\OPHChecker\` を使用しています
 - 環境に合わせて `config.ini` のパスを修正してください
@@ -493,14 +436,9 @@ python -m pytest tests/ -v
 
 ### PyInstaller ビルド
 
-- `build.py` を実行すると、`dist/` ディレクトリに `OPHChecker.exe` が生成されます
+- `build.py` を実行すると、`dist/` ディレクトリに実行ファイルが生成されます
 - ビルド時に自動でバージョンが更新されます
 - 配布する際は `dist/` フォルダ全体をコピーしてください
-
-### パフォーマンス
-
-- 大規模ファイル処理時は、Python メモリ制限を確認してください
-- 比較・抽出処理は複数のパスでデータを読み込むため、SSD 推奨です
 
 ## 変更履歴
 
