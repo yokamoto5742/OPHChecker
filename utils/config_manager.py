@@ -40,6 +40,8 @@ DEFAULT_CONFIG = {
         'comparison_result': '',
         'template_path': '',
         'output_path': '',
+        'excludeitems_file': '',
+        'replacements_file': '',
     },
     'Replacements': {
         'anesthesia_replacements': '球後麻酔:局所,局所麻酔:局所,点眼麻酔:局所,全身麻酔:全身,結膜下:局所',
@@ -47,6 +49,97 @@ DEFAULT_CONFIG = {
         'inpatient_replacements': 'あやめ:入院,わかば:入院,さくら:入院,外来:外来',
     },
 }
+
+
+def _get_exclude_items_file_path(config: configparser.ConfigParser) -> str:
+    """excludeitems.txt のパスを取得"""
+    return config.get('Paths', 'excludeitems_file', fallback='')
+
+
+def _get_replacements_file_path(config: configparser.ConfigParser) -> str:
+    """replacements.txt のパスを取得"""
+    return config.get('Paths', 'replacements_file', fallback='')
+
+
+def _load_exclude_items_config(config: configparser.ConfigParser) -> configparser.ConfigParser:
+    """
+    excludeitems.txt から除外項目設定を読み込む
+    ファイルが存在しない場合はデフォルト値を返す
+    """
+    exclude_config = configparser.ConfigParser()
+    file_path = _get_exclude_items_file_path(config)
+    
+    if file_path and os.path.exists(file_path):
+        try:
+            with open(file_path, encoding='utf-8') as f:
+                exclude_config.read_file(f)
+        except Exception as e:
+            print(f"除外項目ファイルの読み込みエラー: {e}")
+    
+    # デフォルト値を設定
+    if not exclude_config.has_section('ExcludeItems'):
+        exclude_config.add_section('ExcludeItems')
+    if not exclude_config.has_option('ExcludeItems', 'exclusion_line_keywords'):
+        exclude_config.set('ExcludeItems', 'exclusion_line_keywords', 
+                          DEFAULT_CONFIG['ExcludeItems']['exclusion_line_keywords'])
+    if not exclude_config.has_option('ExcludeItems', 'surgery_strings_to_remove'):
+        exclude_config.set('ExcludeItems', 'surgery_strings_to_remove',
+                          DEFAULT_CONFIG['ExcludeItems']['surgery_strings_to_remove'])
+    
+    return exclude_config
+
+
+def _load_replacements_config(config: configparser.ConfigParser) -> configparser.ConfigParser:
+    """
+    replacements.txt から置換項目設定を読み込む
+    ファイルが存在しない場合はデフォルト値を返す
+    """
+    replacements_config = configparser.ConfigParser()
+    file_path = _get_replacements_file_path(config)
+    
+    if file_path and os.path.exists(file_path):
+        try:
+            with open(file_path, encoding='utf-8') as f:
+                replacements_config.read_file(f)
+        except Exception as e:
+            print(f"置換項目ファイルの読み込みエラー: {e}")
+    
+    # デフォルト値を設定
+    if not replacements_config.has_section('Replacements'):
+        replacements_config.add_section('Replacements')
+    for key in ['anesthesia_replacements', 'surgeon_replacements', 'inpatient_replacements']:
+        if not replacements_config.has_option('Replacements', key):
+            replacements_config.set('Replacements', key, DEFAULT_CONFIG['Replacements'][key])
+    
+    return replacements_config
+
+
+def _save_exclude_items_config(config: configparser.ConfigParser, exclude_config: configparser.ConfigParser) -> None:
+    """excludeitems.txt に除外項目設定を保存"""
+    file_path = _get_exclude_items_file_path(config)
+    if not file_path:
+        raise ValueError("excludeitems_file のパスが設定されていません")
+    
+    try:
+        with open(file_path, 'w', encoding='utf-8') as f:
+            exclude_config.write(f)
+    except Exception as e:
+        print(f"除外項目ファイルの保存エラー: {e}")
+        raise
+
+
+def _save_replacements_config(config: configparser.ConfigParser, replacements_config: configparser.ConfigParser) -> None:
+    """replacements.txt に置換項目設定を保存"""
+    file_path = _get_replacements_file_path(config)
+    if not file_path:
+        raise ValueError("replacements_file のパスが設定されていません")
+    
+    try:
+        with open(file_path, 'w', encoding='utf-8') as f:
+            replacements_config.write(f)
+    except Exception as e:
+        print(f"置換項目ファイルの保存エラー: {e}")
+        raise
 
 
 def load_config() -> configparser.ConfigParser:
@@ -125,12 +218,14 @@ def get_exclude_items(config: configparser.ConfigParser) -> list:
 
 
 def get_exclusion_line_keywords(config: configparser.ConfigParser) -> list:
-    keywords_str = config.get('ExcludeItems', 'exclusion_line_keywords', fallback='')
+    exclude_config = _load_exclude_items_config(config)
+    keywords_str = exclude_config.get('ExcludeItems', 'exclusion_line_keywords', fallback='')
     return [keyword.strip() for keyword in keywords_str.split(',') if keyword.strip()]
 
 
 def get_surgery_strings_to_remove(config: configparser.ConfigParser) -> list:
-    strings_str = config.get('ExcludeItems', 'surgery_strings_to_remove', fallback='')
+    exclude_config = _load_exclude_items_config(config)
+    strings_str = exclude_config.get('ExcludeItems', 'surgery_strings_to_remove', fallback='')
     return [string.strip() for string in strings_str.split(',') if string.strip()]
 
 
@@ -146,7 +241,8 @@ def get_replacement_dict(config: configparser.ConfigParser, section: str, key: s
     Returns:
         置換辞書
     """
-    replacement_str = config.get(section, key, fallback='')
+    replacements_config = _load_replacements_config(config)
+    replacement_str = replacements_config.get(section, key, fallback='')
     if not replacement_str:
         return {}
 
@@ -170,9 +266,11 @@ def save_replacement_dict(config: configparser.ConfigParser, section: str, key: 
         key: キー名
         replacement_dict: 置換辞書
     """
+    replacements_config = _load_replacements_config(config)
     pairs = [f"{source}:{target}" for source, target in replacement_dict.items()]
     replacement_str = ','.join(pairs)
-    config.set(section, key, replacement_str)
+    replacements_config.set(section, key, replacement_str)
+    _save_replacements_config(config, replacements_config)
 
 
 def save_exclusion_line_keywords(config: configparser.ConfigParser, keywords: list[str]) -> None:
@@ -183,8 +281,10 @@ def save_exclusion_line_keywords(config: configparser.ConfigParser, keywords: li
         config: configparserオブジェクト
         keywords: キーワードリスト
     """
+    exclude_config = _load_exclude_items_config(config)
     keywords_str = ','.join(keyword.strip() for keyword in keywords if keyword.strip())
-    config.set('ExcludeItems', 'exclusion_line_keywords', keywords_str)
+    exclude_config.set('ExcludeItems', 'exclusion_line_keywords', keywords_str)
+    _save_exclude_items_config(config, exclude_config)
 
 
 def save_surgery_strings_to_remove(config: configparser.ConfigParser, strings: list[str]) -> None:
@@ -195,5 +295,7 @@ def save_surgery_strings_to_remove(config: configparser.ConfigParser, strings: l
         config: configparserオブジェクト
         strings: 削除文字列リスト
     """
+    exclude_config = _load_exclude_items_config(config)
     strings_str = ','.join(string.strip() for string in strings if string.strip())
-    config.set('ExcludeItems', 'surgery_strings_to_remove', strings_str)
+    exclude_config.set('ExcludeItems', 'surgery_strings_to_remove', strings_str)
+    _save_exclude_items_config(config, exclude_config)
