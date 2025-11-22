@@ -1,0 +1,3 @@
+anesthesia_replacements = 球後麻酔:局所,局所麻酔:局所,点眼麻酔:局所,全身麻酔:全身,結膜下:局所
+surgeon_replacements = 橋本義弘:橋本,植田芳樹:植田,増子杏:増子,田中伸弥:田中,渡辺裕士:渡辺,鈴木貴文:鈴木,但馬悠介:但馬
+inpatient_replacements = あやめ:入院,わかば:入院,さくら:入院,外来:外来
