@@ -54,8 +54,6 @@ def surgery_error_extractor(comparison_result: str, output_path: str, template_p
                     except (ValueError, TypeError):
                         pass
 
-                # 比較列のTrue/Falseを一致/不一致に変換
-                # CSVから読み込むと文字列になるため、両方のケースに対応
                 if value is True or value == 'True':
                     value = '一致'
                 elif value is False or value == 'False':
