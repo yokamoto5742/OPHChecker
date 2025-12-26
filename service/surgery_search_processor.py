@@ -1,7 +1,6 @@
 import configparser
 import logging
 import unicodedata
-from typing import cast
 
 import pandas as pd
 
@@ -121,8 +120,8 @@ def _handle_duplicates(df: pd.DataFrame) -> pd.DataFrame:
 def _reorder_and_sort(df: pd.DataFrame) -> pd.DataFrame:
     """列の順番を並び替えてソート"""
     column_order = ['手術日', '患者ID', '氏名', '入外', '術眼', '手術', '医師', '麻酔', '術前']
-    df = cast(pd.DataFrame, df[column_order])
-    df = cast(pd.DataFrame, df.sort_values(by=['手術日', '患者ID']))
+    df = df[column_order]
+    df = df.sort_values(by=['手術日', '患者ID'])
     return df
 
 

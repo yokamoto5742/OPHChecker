@@ -1,6 +1,6 @@
 import logging
 import unicodedata
-from typing import Mapping, cast
+from typing import Mapping
 
 import pandas as pd
 
@@ -19,28 +19,28 @@ def process_surgery_schedule(surgery_schedule: str, processed_surgery_schedule: 
     required_columns = ['日付', 'ID', '氏名', '入外', '術式', '麻酔', '術者']
     df_processed = df[required_columns].copy()
 
-    date_series = cast(pd.Series, df_processed['日付'])
+    date_series = df_processed['日付']
     df_processed['日付'] = pd.to_datetime(date_series).dt.strftime('%Y/%m/%d')
 
     # 術式列の値を全角カナに変換
-    surgery_series = cast(pd.Series, df_processed['術式'])
+    surgery_series = df_processed['術式']
     df_processed['術式'] = surgery_series.apply(
         lambda x: unicodedata.normalize('NFKC', str(x)) if pd.notna(x) else x
     )
 
-    split_series = cast(pd.Series, df_processed['術式'])
+    split_series = df_processed['術式']
     df_processed[['術眼', '手術']] = split_series.str.split(')', n=1, expand=True)
-    hand_series = cast(pd.Series, df_processed['手術'])
+    hand_series = df_processed['手術']
     df_processed['手術'] = hand_series.str.strip()
 
     df_processed = df_processed.drop(columns=['術式'])
 
     rename_mapping: Mapping[str, str] = {'日付': '手術日', 'ID': '患者ID', '術者': '医師'}
-    df_processed = cast(pd.DataFrame, df_processed.rename(columns=rename_mapping))
+    df_processed = df_processed.rename(columns=rename_mapping)
 
-    df_processed = cast(pd.DataFrame, df_processed[['手術日', '患者ID', '氏名', '入外', '術眼', '手術', '医師', '麻酔']])
+    df_processed = df_processed[['手術日', '患者ID', '氏名', '入外', '術眼', '手術', '医師', '麻酔']]
 
-    df_processed = cast(pd.DataFrame, df_processed.sort_values(by=['手術日', '患者ID']))
+    df_processed = df_processed.sort_values(by=['手術日', '患者ID'])
 
     df_processed.to_csv(processed_surgery_schedule, index=False, encoding='cp932')
 

@@ -1,7 +1,6 @@
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import cast
 
 import pandas as pd
 from openpyxl import load_workbook
@@ -34,7 +33,7 @@ def surgery_error_extractor(comparison_result: str, output_path: str, template_p
         return ""
 
     output_columns = ['手術日', '患者ID', '氏名', '入外', '術眼', '手術', '医師', '麻酔', '術前','入外_比較', '術眼_比較', '手術_比較', '医師_比較', '麻酔_比較']
-    df_output = cast(pd.DataFrame, df_errors[output_columns].copy())
+    df_output = df_errors[output_columns].copy()
 
     Path(output_path).mkdir(parents=True, exist_ok=True)
 
@@ -56,9 +55,10 @@ def surgery_error_extractor(comparison_result: str, output_path: str, template_p
                         pass
 
                 # 比較列のTrue/Falseを一致/不一致に変換
-                if value is True:
+                # CSVから読み込むと文字列になるため、両方のケースに対応
+                if value is True or value == 'True':
                     value = '一致'
-                elif value is False:
+                elif value is False or value == 'False':
                     value = '不一致'
 
                 ws.cell(row=row_idx, column=col_idx).value = value
