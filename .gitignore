@@ -2,12 +2,9 @@ build/
 dist/
 logs/
 .idea/
-.serena/
+__pycache__/
 
 .env
 .coverage
 *.spec
 *.iml
-
-error_log.txt
-/nul
