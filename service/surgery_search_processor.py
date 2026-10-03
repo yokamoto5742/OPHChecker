@@ -42,7 +42,10 @@ def _select_required_columns(df: pd.DataFrame) -> pd.DataFrame:
 
 def _convert_surgery_date_format(df: pd.DataFrame) -> pd.DataFrame:
     """手術日をYYYY/MM/DD形式に変換"""
-    df['手術日'] = pd.to_datetime(df['手術日'], format='%y/%m/%d').dt.strftime('%Y/%m/%d').astype(str)
+    # 眼科システムの出力形式により年が2桁(25/01/15)と4桁(2025/01/15)の両方がある
+    has_four_digit_year = df['手術日'].astype(str).str.match(r'\d{4}/').all()
+    date_format = '%Y/%m/%d' if has_four_digit_year else '%y/%m/%d'
+    df['手術日'] = pd.to_datetime(df['手術日'], format=date_format).dt.strftime('%Y/%m/%d').astype(str)
     return df
 
 

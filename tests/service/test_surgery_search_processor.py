@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 import pandas as pd
 import pytest
 
-from service.surgery_search_processor import process_eye_surgery_data
+from service.surgery_search_processor import _convert_surgery_date_format, process_eye_surgery_data
 
 
 @pytest.fixture
@@ -131,6 +131,14 @@ def test_process_eye_surgery_data_date_conversion(temp_csv_file):
 
     # 日付フォーマットを確認
     assert df.iloc[0]['手術日'].startswith('2025/')
+
+
+@pytest.mark.parametrize('surgery_date', ['26/09/15', '2026/09/15'])
+def test_convert_surgery_date_format_accepts_two_and_four_digit_year(surgery_date):
+    """年が2桁・4桁どちらでもYYYY/MM/DD形式に変換される"""
+    df = _convert_surgery_date_format(pd.DataFrame({'手術日': [surgery_date]}))
+
+    assert df.iloc[0]['手術日'] == '2026/09/15'
 
 
 def test_process_eye_surgery_data_anesthesia_replacement(temp_csv_file):
