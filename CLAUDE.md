@@ -173,5 +173,5 @@ save_config(config)
 
 - **PyInstaller Builds**: The application supports both normal Python execution and PyInstaller frozen executables. Config loading checks `sys.frozen` to determine paths.
 - **Japanese File Encoding**: All user-facing data files use `cp932` (Windows Shift-JIS). Use this encoding when reading/writing CSV and Excel files.
-- **Version Management**: Version is stored in `app/__init__.py` and synchronized with `docs/README.md` via version_manager.py during builds.
+- **Version Management**: Version is stored in `app/__init__.py` and synchronized with `README.md` via version_manager.py during builds.
 - **Input/Output Paths**: Service processors use hard-coded paths in their `__main__` sections as examples. In production, use `config_manager.py` or pass paths dynamically.

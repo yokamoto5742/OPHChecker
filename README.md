@@ -9,21 +9,10 @@
 - **手術データ比較**: 手術予定表と眼科手術検索データの突合、差分確認
 - **エラー抽出・レポート**: 不正なレコードを自動検出し、Excel レポート生成
 
-**現在のバージョン**: 1.0.5
-**最終更新日**: 2025年12月26日
-
 ## システム要件
 
-- **Python**: 3.12 32ビット版
+- **Python**: 3.12 以上
 - **OS**: Windows11
-- **メモリ**: 最小 4GB
-
-### 必須ライブラリ
-
-- pandas (1.5.3) - データ処理(32bit版対応)
-- openpyxl (3.1.5) - Excel ファイル操作
-
-詳細は `requirements.txt` を参照してください。
 
 ## セットアップ手順
 
@@ -272,7 +261,7 @@ surgery_error_extractor('comparison.csv', 'output/', 'template.xlsx')
 
 **主要関数**:
 - `setup_logging()`: ロギングの初期化
-- ログは `utils/logs/` ディレクトリに出力
+- ログは `utils/logs` ディレクトリに出力
 - 保持期間設定: `config.ini` の `log_retention_days` で制御
 
 ### file_cleaner.py
@@ -382,7 +371,7 @@ python -c "from scripts.version_manager import update_version; update_version()"
 **ビルド処理の流れ**:
 1. `scripts/version_manager.py` が呼ばれてバージョンを自動インクリメント
 2. `app/__init__.py` の `__version__` と `__date__` を更新
-3. `docs/README.md` のバージョン・日付も同期更新
+3. `README.md` のバージョン・日付も同期更新
 4. PyInstaller でスタンドアロン実行ファイルを生成 (`dist/眼科手術指示確認.exe`)
 
 ## コード規約
@@ -463,12 +452,8 @@ python -m pytest tests/ -v
 
 ## 変更履歴
 
-詳細な変更履歴は [CHANGELOG.md](./CHANGELOG.md) を参照してください。
+詳細な変更履歴は [CHANGELOG.md](docs/CHANGELOG.md) を参照してください。
 
 ## ライセンス
 
-[LICENSE](./LICENSE) を参照してください。
-
----
-
-**開発者向け**: CLAUDE.md および CHANGELOG.md に詳細な開発ガイドラインがあります。
+[LICENSE](docs/LICENSE) を参照してください。
