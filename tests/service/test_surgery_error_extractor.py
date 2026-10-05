@@ -1,12 +1,19 @@
 import tempfile
 from pathlib import Path
+from typing import Any
 from unittest.mock import patch
 
-import pandas as pd
 import pytest
-from openpyxl import Workbook
+from openpyxl import Workbook, load_workbook as load_result_workbook
 
 from service.surgery_error_extractor import surgery_error_extractor
+
+
+def _read_result_rows(result: str) -> list[tuple[Any, ...]]:
+    """出力Excelをヘッダー行を含む行のリストとして読み込む"""
+    ws = load_result_workbook(result).active
+    assert ws is not None
+    return list(ws.iter_rows(values_only=True))
 
 
 @pytest.fixture
@@ -14,26 +21,14 @@ def temp_comparison_file():
     """一時的な比較結果ファイルを作成"""
     temp_dir = tempfile.mkdtemp()
 
-    # 実際のsurgery_comparatorと同じようにDataFrameを作成してCSVに書き込む
-    df = pd.DataFrame({
-        '手術日': ['2025/01/15', '2025/01/16', '2025/01/17'],
-        '患者ID': [12345, 12346, 12347],
-        '氏名': ['患者A', '患者B', '患者C'],
-        '入外': ['外来', '入院', '外来'],
-        '術眼': ['R', 'L', 'B'],
-        '手術': ['白内障手術', '緑内障手術', '白内障手術'],
-        '医師': ['橋本', '植田', '増子'],
-        '麻酔': ['局所', '全身', '局所'],
-        '術前': ['検査A', '検査B', '検査C'],
-        '入外_比較': [True, True, '未入力'],
-        '術眼_比較': [True, False, '未入力'],
-        '手術_比較': [True, True, '未入力'],
-        '医師_比較': [True, True, '未入力'],
-        '麻酔_比較': [True, True, '未入力']
-    })
-
+    # 実際のsurgery_comparatorと同じ形式のCSVを書き込む
+    data = """手術日,患者ID,氏名,入外,術眼,手術,医師,麻酔,術前,入外_比較,術眼_比較,手術_比較,医師_比較,麻酔_比較
+2025/01/15,12345,患者A,外来,R,白内障手術,橋本,局所,検査A,True,True,True,True,True
+2025/01/16,12346,患者B,入院,L,緑内障手術,植田,全身,検査B,True,False,True,True,True
+2025/01/17,12347,患者C,外来,B,白内障手術,増子,局所,検査C,未入力,未入力,未入力,未入力,未入力
+"""
     comparison_path = Path(temp_dir) / 'comparison.csv'
-    df.to_csv(comparison_path, index=False, encoding='cp932')
+    comparison_path.write_text(data, encoding='cp932')
 
     output_dir = Path(temp_dir) / 'output'
     output_dir.mkdir()
@@ -134,7 +129,7 @@ def test_surgery_error_extractor_returns_empty_without_errors(temp_template_file
 
 
 def test_surgery_error_extractor_extracts_false_records(temp_comparison_file, temp_template_file):
-    """未入力のレコードが抽出される"""
+    """未入力が混在していても不一致のレコードが抽出される"""
     with patch('service.surgery_error_extractor.load_workbook') as mock_load:
         from openpyxl import load_workbook
         mock_load.return_value = load_workbook(temp_template_file)
@@ -145,14 +140,11 @@ def test_surgery_error_extractor_extracts_false_records(temp_comparison_file, te
             temp_template_file
         )
 
-        # 結果ファイルを読み込み
-        df = pd.read_excel(result)
+        rows = _read_result_rows(result)
 
-        # 未入力のレコードが抽出される（現在の実装ではFalse文字列は抽出されない）
-        assert len(df) >= 1
-
-        # 患者Cが含まれる（未入力）
-        assert '患者C' in df['氏名'].values
+        # 不一致の患者Bと未入力の患者Cのみ抽出され、一致のみの患者Aは含まれない
+        assert [row[2] for row in rows[1:]] == ['患者B', '患者C']
+        assert rows[1][10] == '不一致'
 
 
 def test_surgery_error_extractor_extracts_uninput_records(temp_comparison_file, temp_template_file):
@@ -167,11 +159,10 @@ def test_surgery_error_extractor_extracts_uninput_records(temp_comparison_file, 
             temp_template_file
         )
 
-        # 結果ファイルを読み込み
-        df = pd.read_excel(result)
+        rows = _read_result_rows(result)
 
         # 患者Cが含まれる（未入力）
-        assert '患者C' in df['氏名'].values
+        assert '患者C' in [row[2] for row in rows[1:]]
 
 
 def test_surgery_error_extractor_correct_columns(temp_comparison_file, temp_template_file):
@@ -186,15 +177,14 @@ def test_surgery_error_extractor_correct_columns(temp_comparison_file, temp_temp
             temp_template_file
         )
 
-        # 結果ファイルを読み込み
-        df = pd.read_excel(result)
+        rows = _read_result_rows(result)
 
         expected_columns = [
             '手術日', '患者ID', '氏名', '入外', '術眼', '手術', '医師', '麻酔', '術前',
             '入外_比較', '術眼_比較', '手術_比較', '医師_比較', '麻酔_比較'
         ]
 
-        assert list(df.columns) == expected_columns
+        assert list(rows[0]) == expected_columns
 
 
 def test_surgery_error_extractor_filename_format(temp_comparison_file, temp_template_file):

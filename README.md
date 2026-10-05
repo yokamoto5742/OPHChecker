@@ -406,7 +406,7 @@ df.to_csv('output.csv', encoding='cp932', index=False)
 
 **原因**: ファイルエンコーディングが UTF-8 ではなく cp932 を使用している
 
-**解決策**: pandas の `encoding='cp932'` を指定
+**解決策**: CSVの読み書きで `encoding='cp932'` を指定
 
 ```python
 df = pd.read_csv('ファイル名.csv', encoding='cp932')

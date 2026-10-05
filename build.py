@@ -8,6 +8,9 @@ def build_executable():
         "--windowed",
         "--icon=assets/OPHChecker.ico",
         "--add-data", "utils/config.ini:.",
+        # openpyxlが任意でimportするnumpy/pandasが環境にあっても同梱しない
+        "--exclude-module", "numpy",
+        "--exclude-module", "pandas",
         "main.py"
     ])
 

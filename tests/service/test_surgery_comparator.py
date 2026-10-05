@@ -1,10 +1,10 @@
 import tempfile
 from pathlib import Path
 
-import pandas as pd
 import pytest
 
 from service.surgery_comparator import compare_surgery_data
+from utils.csv_table import read_csv_rows
 
 
 @pytest.fixture
@@ -65,7 +65,7 @@ def test_compare_surgery_data_correct_columns(temp_csv_files):
         temp_csv_files['comparison']
     )
 
-    df = pd.read_csv(temp_csv_files['comparison'], encoding='cp932')
+    rows = read_csv_rows(temp_csv_files['comparison'])
 
     expected_columns = [
         '手術日', '患者ID', '氏名', '入外', '術眼',
@@ -74,7 +74,7 @@ def test_compare_surgery_data_correct_columns(temp_csv_files):
         '手術_比較', '医師_比較', '麻酔_比較'
     ]
 
-    assert list(df.columns) == expected_columns
+    assert list(rows[0].keys()) == expected_columns
 
 
 def test_compare_surgery_data_matching_records(temp_csv_files):
@@ -85,14 +85,14 @@ def test_compare_surgery_data_matching_records(temp_csv_files):
         temp_csv_files['comparison']
     )
 
-    df = pd.read_csv(temp_csv_files['comparison'], encoding='cp932')
+    rows = read_csv_rows(temp_csv_files['comparison'])
 
     # 1件目は完全一致
-    assert df.iloc[0]['入外_比較'] == True
-    assert df.iloc[0]['術眼_比較'] == True
-    assert df.iloc[0]['手術_比較'] == True
-    assert df.iloc[0]['医師_比較'] == True
-    assert df.iloc[0]['麻酔_比較'] == True
+    assert rows[0]['入外_比較'] == 'True'
+    assert rows[0]['術眼_比較'] == 'True'
+    assert rows[0]['手術_比較'] == 'True'
+    assert rows[0]['医師_比較'] == 'True'
+    assert rows[0]['麻酔_比較'] == 'True'
 
 
 def test_compare_surgery_data_mismatching_records(temp_csv_files):
@@ -103,10 +103,10 @@ def test_compare_surgery_data_mismatching_records(temp_csv_files):
         temp_csv_files['comparison']
     )
 
-    df = pd.read_csv(temp_csv_files['comparison'], encoding='cp932')
+    rows = read_csv_rows(temp_csv_files['comparison'])
 
     # 3件目は術眼が不一致（B vs L）
-    assert df.iloc[2]['術眼_比較'] == False
+    assert rows[2]['術眼_比較'] == 'False'
 
 
 def test_compare_surgery_data_missing_records():
@@ -135,12 +135,12 @@ def test_compare_surgery_data_missing_records():
             str(comparison_path)
         )
 
-        df = pd.read_csv(str(comparison_path), encoding='cp932')
+        rows = read_csv_rows(str(comparison_path))
 
         # すべて未入力
-        assert df.iloc[0]['入外_比較'] == '未入力'
-        assert df.iloc[0]['術眼_比較'] == '未入力'
-        assert df.iloc[0]['手術_比較'] == '未入力'
+        assert rows[0]['入外_比較'] == '未入力'
+        assert rows[0]['術眼_比較'] == '未入力'
+        assert rows[0]['手術_比較'] == '未入力'
 
     finally:
         import shutil

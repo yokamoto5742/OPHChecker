@@ -6,8 +6,6 @@ from pathlib import Path
 from tkinter import messagebox, scrolledtext
 from typing import Any, Callable
 
-import pandas as pd
-
 from app import __version__
 from service.surgery_comparator import compare_surgery_data
 from service.surgery_error_extractor import surgery_error_extractor
@@ -25,6 +23,7 @@ from utils.config_manager import (
     save_replacement_dict,
     save_surgery_strings_to_remove,
 )
+from utils.csv_table import read_csv_rows
 from widgets.exclude_items_dialog import ExcludeItemsDialog
 from widgets.replacements_dialog import ReplacementsDialog
 
@@ -252,9 +251,9 @@ class OPHCheckerGUI:
 
     def _log_completion_summary(self, processed_surgery_search_data: str) -> None:
         """完了サマリーをログに記録"""
-        df_search = pd.read_csv(processed_surgery_search_data, encoding='cp932')
-        self._log_message(f"\n対象期間: {df_search['手術日'].min()} ～ {df_search['手術日'].max()}")
-        logging.info(f"対象期間: {df_search['手術日'].min()} ～ {df_search['手術日'].max()}")
+        surgery_dates = [row['手術日'] for row in read_csv_rows(processed_surgery_search_data)]
+        self._log_message(f"\n対象期間: {min(surgery_dates)} ～ {max(surgery_dates)}")
+        logging.info(f"対象期間: {min(surgery_dates)} ～ {max(surgery_dates)}")
         self.status_var.set("処理完了")
         logging.info("すべての処理が正常に完了しました")
 

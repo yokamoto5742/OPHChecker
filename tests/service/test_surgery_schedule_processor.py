@@ -1,10 +1,10 @@
 import tempfile
 from pathlib import Path
 
-import pandas as pd
 import pytest
 
 from service.surgery_schedule_processor import process_surgery_schedule
+from utils.csv_table import read_csv_rows
 
 
 @pytest.fixture
@@ -65,10 +65,10 @@ def test_process_surgery_schedule_correct_columns(temp_excel_file):
         temp_excel_file['output']
     )
 
-    df = pd.read_csv(temp_excel_file['output'], encoding='cp932')
+    rows = read_csv_rows(temp_excel_file['output'])
 
     expected_columns = ['手術日', '患者ID', '氏名', '入外', '術眼', '手術', '医師', '麻酔']
-    assert list(df.columns) == expected_columns
+    assert list(rows[0].keys()) == expected_columns
 
 
 def test_process_surgery_schedule_splits_surgery_field(temp_excel_file):
@@ -78,10 +78,10 @@ def test_process_surgery_schedule_splits_surgery_field(temp_excel_file):
         temp_excel_file['output']
     )
 
-    df = pd.read_csv(temp_excel_file['output'], encoding='cp932')
+    rows = read_csv_rows(temp_excel_file['output'])
 
-    assert df.iloc[0]['術眼'] == 'R'
-    assert df.iloc[0]['手術'] == '白内障手術'
+    assert rows[0]['術眼'] == 'R'
+    assert rows[0]['手術'] == '白内障手術'
 
 
 def test_process_surgery_schedule_date_format(temp_excel_file):
@@ -91,11 +91,11 @@ def test_process_surgery_schedule_date_format(temp_excel_file):
         temp_excel_file['output']
     )
 
-    df = pd.read_csv(temp_excel_file['output'], encoding='cp932')
+    rows = read_csv_rows(temp_excel_file['output'])
 
     # 日付フォーマットを確認
-    assert '/' in df.iloc[0]['手術日']
-    assert len(df.iloc[0]['手術日']) == 10  # YYYY/MM/DD
+    assert '/' in rows[0]['手術日']
+    assert len(rows[0]['手術日']) == 10  # YYYY/MM/DD
 
 
 def test_process_surgery_schedule_sorted_by_date_and_id(temp_excel_file):
@@ -105,10 +105,10 @@ def test_process_surgery_schedule_sorted_by_date_and_id(temp_excel_file):
         temp_excel_file['output']
     )
 
-    df = pd.read_csv(temp_excel_file['output'], encoding='cp932')
+    rows = read_csv_rows(temp_excel_file['output'])
 
     # 日付でソートされていることを確認
-    assert df.iloc[0]['手術日'] <= df.iloc[1]['手術日']
+    assert rows[0]['手術日'] <= rows[1]['手術日']
 
 
 def test_process_surgery_schedule_with_different_sheet_name():

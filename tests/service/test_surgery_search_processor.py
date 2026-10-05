@@ -2,10 +2,10 @@ import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-import pandas as pd
 import pytest
 
 from service.surgery_search_processor import _convert_surgery_date_format, process_eye_surgery_data
+from utils.csv_table import read_csv_rows
 
 
 @pytest.fixture
@@ -97,10 +97,10 @@ def test_process_eye_surgery_data_correct_columns(temp_csv_file):
                         temp_csv_file['output']
                     )
 
-    df = pd.read_csv(temp_csv_file['output'], encoding='cp932')
+    rows = read_csv_rows(temp_csv_file['output'])
 
     expected_columns = ['手術日', '患者ID', '氏名', '入外', '術眼', '手術', '医師', '麻酔', '術前']
-    assert list(df.columns) == expected_columns
+    assert list(rows[0].keys()) == expected_columns
 
 
 def test_process_eye_surgery_data_date_conversion(temp_csv_file):
@@ -127,18 +127,18 @@ def test_process_eye_surgery_data_date_conversion(temp_csv_file):
                         temp_csv_file['output']
                     )
 
-    df = pd.read_csv(temp_csv_file['output'], encoding='cp932')
+    rows = read_csv_rows(temp_csv_file['output'])
 
     # 日付フォーマットを確認
-    assert df.iloc[0]['手術日'].startswith('2025/')
+    assert rows[0]['手術日'].startswith('2025/')
 
 
 @pytest.mark.parametrize('surgery_date', ['26/09/15', '2026/09/15'])
 def test_convert_surgery_date_format_accepts_two_and_four_digit_year(surgery_date):
     """年が2桁・4桁どちらでもYYYY/MM/DD形式に変換される"""
-    df = _convert_surgery_date_format(pd.DataFrame({'手術日': [surgery_date]}))
+    rows = _convert_surgery_date_format([{'手術日': surgery_date}])
 
-    assert df.iloc[0]['手術日'] == '2026/09/15'
+    assert rows[0]['手術日'] == '2026/09/15'
 
 
 def test_process_eye_surgery_data_anesthesia_replacement(temp_csv_file):
@@ -165,9 +165,9 @@ def test_process_eye_surgery_data_anesthesia_replacement(temp_csv_file):
                         temp_csv_file['output']
                     )
 
-    df = pd.read_csv(temp_csv_file['output'], encoding='cp932')
+    rows = read_csv_rows(temp_csv_file['output'])
 
-    assert df.iloc[0]['麻酔'] == '局所'  # 球後麻酔 -> 局所
+    assert rows[0]['麻酔'] == '局所'  # 球後麻酔 -> 局所
 
 
 def test_process_eye_surgery_data_surgeon_replacement(temp_csv_file):
@@ -194,9 +194,9 @@ def test_process_eye_surgery_data_surgeon_replacement(temp_csv_file):
                         temp_csv_file['output']
                     )
 
-    df = pd.read_csv(temp_csv_file['output'], encoding='cp932')
+    rows = read_csv_rows(temp_csv_file['output'])
 
-    assert df.iloc[0]['医師'] == '橋本'  # 橋本義弘 -> 橋本
+    assert rows[0]['医師'] == '橋本'  # 橋本義弘 -> 橋本
 
 
 def test_process_eye_surgery_data_removes_surgery_strings(temp_csv_file):
@@ -223,9 +223,9 @@ def test_process_eye_surgery_data_removes_surgery_strings(temp_csv_file):
                         temp_csv_file['output']
                     )
 
-    df = pd.read_csv(temp_csv_file['output'], encoding='cp932')
+    rows = read_csv_rows(temp_csv_file['output'])
 
-    assert '(トーリック)' not in df.iloc[0]['手術']
+    assert '(トーリック)' not in rows[0]['手術']
 
 
 def test_process_eye_surgery_data_creates_eye_field(temp_csv_file):
@@ -252,11 +252,11 @@ def test_process_eye_surgery_data_creates_eye_field(temp_csv_file):
                         temp_csv_file['output']
                     )
 
-    df = pd.read_csv(temp_csv_file['output'], encoding='cp932')
+    rows = read_csv_rows(temp_csv_file['output'])
 
-    assert df.iloc[0]['術眼'] == 'R'  # 右のみ
-    assert df.iloc[1]['術眼'] == 'L'  # 左のみ
-    assert df.iloc[2]['術眼'] == 'B'  # 両眼
+    assert rows[0]['術眼'] == 'R'  # 右のみ
+    assert rows[1]['術眼'] == 'L'  # 左のみ
+    assert rows[2]['術眼'] == 'B'  # 両眼
 
 
 def test_process_eye_surgery_data_excludes_keywords(temp_csv_file):
@@ -283,7 +283,7 @@ def test_process_eye_surgery_data_excludes_keywords(temp_csv_file):
                         temp_csv_file['output']
                     )
 
-    df = pd.read_csv(temp_csv_file['output'], encoding='cp932')
+    rows = read_csv_rows(temp_csv_file['output'])
 
     # ★を含む患者は除外される
-    assert '★除外患者' not in df['氏名'].values
+    assert '★除外患者' not in [row['氏名'] for row in rows]

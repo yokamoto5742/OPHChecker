@@ -2,8 +2,28 @@ import logging
 from datetime import datetime
 from pathlib import Path
 
-import pandas as pd
 from openpyxl import load_workbook
+
+from utils.csv_table import DATE_OUTPUT_FORMAT, read_csv_rows
+
+COMPARISON_COLUMNS = ['入外_比較', '術眼_比較', '手術_比較', '医師_比較', '麻酔_比較']
+OUTPUT_COLUMNS = ['手術日', '患者ID', '氏名', '入外', '術眼', '手術', '医師', '麻酔', '術前'] + COMPARISON_COLUMNS
+RESULT_LABELS = {'True': '一致', 'False': '不一致'}
+
+
+def _to_cell_value(column: str, text: str) -> datetime | int | str | None:
+    """CSVの文字列をExcelセルに書き込む値に変換"""
+    if text == '':
+        return None
+    if column == '手術日':
+        # datetimeオブジェクトに変換してテンプレートの書式を反映
+        try:
+            return datetime.strptime(text, DATE_OUTPUT_FORMAT)
+        except ValueError:
+            return text
+    if column == '患者ID':
+        return int(text)
+    return RESULT_LABELS.get(text, text)
 
 
 def surgery_error_extractor(comparison_result: str, output_path: str, template_path: str) -> str:
@@ -18,22 +38,14 @@ def surgery_error_extractor(comparison_result: str, output_path: str, template_p
     Returns:
         生成されたファイルのパス
     """
-    df = pd.read_csv(comparison_result, encoding='cp932')
-    comparison_cols = ['入外_比較', '術眼_比較', '手術_比較', '医師_比較', '麻酔_比較']
+    error_rows = [
+        row for row in read_csv_rows(comparison_result)
+        if any(row[column] in ('False', '未入力') for column in COMPARISON_COLUMNS)
+    ]
 
-    # FALSEまたは「未入力」が含まれる行を抽出
-    mask = pd.Series([False] * len(df))
-    for col in comparison_cols:
-        mask |= (df[col] == False) | (df[col] == '未入力')
-
-    df_errors = df[mask]
-
-    if len(df_errors) == 0:
+    if len(error_rows) == 0:
         logging.info("不一致および未入力はありませんでした")
         return ""
-
-    output_columns = ['手術日', '患者ID', '氏名', '入外', '術眼', '手術', '医師', '麻酔', '術前','入外_比較', '術眼_比較', '手術_比較', '医師_比較', '麻酔_比較']
-    df_output = df_errors[output_columns].copy()
 
     Path(output_path).mkdir(parents=True, exist_ok=True)
 
@@ -44,27 +56,15 @@ def surgery_error_extractor(comparison_result: str, output_path: str, template_p
     wb = load_workbook(template_path)
     ws = wb.active
 
-    for row_idx, (_, row_data) in enumerate(df_output.iterrows(), start=2):
-        for col_idx, value in enumerate(row_data, start=1):
-            if ws is not None:
-                # 手術日列（1列目）をdatetimeオブジェクトに変換してテンプレートの書式を反映
-                if col_idx == 1 and pd.notna(value):
-                    try:
-                        value = datetime.strptime(str(value), '%Y/%m/%d')
-                    except (ValueError, TypeError):
-                        pass
-
-                if value is True or value == 'True':
-                    value = '一致'
-                elif value is False or value == 'False':
-                    value = '不一致'
-
-                ws.cell(row=row_idx, column=col_idx).value = value
+    if ws is not None:
+        for row_idx, row in enumerate(error_rows, start=2):
+            for col_idx, column in enumerate(OUTPUT_COLUMNS, start=1):
+                ws.cell(row=row_idx, column=col_idx, value=_to_cell_value(column, row[column]))
 
     wb.save(output_filepath)
 
     logging.info(f"眼科手術指示確認ファイルの作成が完了しました")
-    logging.info(f"エラー件数: {len(df_errors)}件")
+    logging.info(f"エラー件数: {len(error_rows)}件")
     logging.info(f"出力ファイル: {output_filepath}")
 
     return str(output_filepath)

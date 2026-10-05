@@ -3,6 +3,18 @@
 このファイルは、OPHCheckerプロジェクトにおけるすべての重要な変更を記録します。
 フォーマットは [Keep a Changelog](https://keepachangelog.com/ja/1.1.0/) に基づいています。
 
+## [Unreleased]
+
+### 変更
+- pandasへの依存を削除し、標準ライブラリのcsvとxlrd・openpyxlのみで処理するように変更
+  - 実行ファイルのサイズを約83MBから約30MBに削減
+  - CSVの読み書きと日付・患者IDの正規化を `utils/csv_table.py` に集約
+- `build.py` でnumpy・pandasを同梱対象から除外
+- テストコードからpandasを削除
+
+### 修正
+- 予定表に該当のない患者（未入力）が含まれると、不一致のみの行が眼科手術指示確認ファイルに出力されない不具合を修正
+
 ## [1.0.5] - 2025-12-26
 
 ### 変更
