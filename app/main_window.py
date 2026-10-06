@@ -153,7 +153,7 @@ class OPHCheckerGUI:
 
     def _validate_config(self) -> bool:
         paths = get_paths(self.config)
-        required_paths = ["surgery_search_data", "surgery_schedule", "output_path"]
+        required_paths = ["surgery_search_data", "surgery_schedule", "template_path"]
 
         for path_key in required_paths:
             path_value = paths.get(path_key)
@@ -174,6 +174,12 @@ class OPHCheckerGUI:
                 return False
 
         return True
+
+    def _create_output_folders(self, paths: dict) -> None:
+        """出力先フォルダを作成"""
+        Path(paths["output_path"]).mkdir(parents=True, exist_ok=True)
+        for path_key in ["processed_surgery_schedule", "processed_surgery_search_data", "comparison_result"]:
+            Path(paths[path_key]).parent.mkdir(parents=True, exist_ok=True)
 
     def _execute_step(
         self,
@@ -252,8 +258,12 @@ class OPHCheckerGUI:
     def _log_completion_summary(self, processed_surgery_search_data: str) -> None:
         """完了サマリーをログに記録"""
         surgery_dates = [row['手術日'] for row in read_csv_rows(processed_surgery_search_data)]
-        self._log_message(f"\n対象期間: {min(surgery_dates)} ～ {max(surgery_dates)}")
-        logging.info(f"対象期間: {min(surgery_dates)} ～ {max(surgery_dates)}")
+        if surgery_dates:
+            summary = f"対象期間: {min(surgery_dates)} ～ {max(surgery_dates)}"
+        else:
+            summary = "対象データはありませんでした"
+        self._log_message(f"\n{summary}")
+        logging.info(summary)
         self.status_var.set("処理完了")
         logging.info("すべての処理が正常に完了しました")
 
@@ -274,7 +284,7 @@ class OPHCheckerGUI:
             self._log_message("=" * 60)
 
             paths = get_paths(self.config)
-            Path(paths["output_path"]).mkdir(parents=True, exist_ok=True)
+            self._create_output_folders(paths)
 
             self._process_surgery_schedule(paths)
             self._process_surgery_search(paths)

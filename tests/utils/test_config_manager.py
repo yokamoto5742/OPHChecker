@@ -160,6 +160,34 @@ def test_get_replacement_dict_empty():
     assert result == {}
 
 
+def test_broken_exclude_items_file_raises_and_is_not_overwritten(temp_config_file, tmp_path):
+    """txtが存在するのに読めない場合は例外になり、既定値で上書きされない"""
+    broken_text = 'セクションの無い行\n'
+    exclude_items_file = tmp_path / 'excludeitems.txt'
+    exclude_items_file.write_text(broken_text, encoding='utf-8')
+
+    with patch('utils.config_manager.CONFIG_PATH', temp_config_file):
+        config = load_config()
+
+        with pytest.raises(configparser.Error):
+            get_exclusion_line_keywords(config)
+        with pytest.raises(configparser.Error):
+            save_exclusion_line_keywords(config, ['キーワード1'])
+
+    assert exclude_items_file.read_text(encoding='utf-8') == broken_text
+
+
+def test_broken_replacements_file_raises(temp_config_file, tmp_path):
+    """置換txtが存在するのに読めない場合は例外になる"""
+    (tmp_path / 'replacements.txt').write_text('セクションの無い行\n', encoding='utf-8')
+
+    with patch('utils.config_manager.CONFIG_PATH', temp_config_file):
+        config = load_config()
+
+        with pytest.raises(configparser.Error):
+            get_replacement_dict(config, 'Replacements', 'anesthesia_replacements')
+
+
 def test_save_replacement_dict(temp_config_file):
     """置換辞書を保存できる"""
     with patch('utils.config_manager.CONFIG_PATH', temp_config_file):

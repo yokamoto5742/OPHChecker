@@ -64,18 +64,15 @@ def _get_replacements_file_path(config: configparser.ConfigParser) -> str:
 def _load_exclude_items_config(config: configparser.ConfigParser) -> configparser.ConfigParser:
     """
     excludeitems.txt から除外項目設定を読み込む
-    ファイルが存在しない場合はデフォルト値を返す
+    ファイルが存在しない場合はデフォルト値を返す（存在するのに読めない場合は例外）
     """
     exclude_config = configparser.ConfigParser()
     file_path = _get_exclude_items_file_path(config)
     
     if file_path and os.path.exists(file_path):
-        try:
-            with open(file_path, encoding='utf-8') as f:
-                exclude_config.read_file(f)
-        except Exception as e:
-            print(f"除外項目ファイルの読み込みエラー: {e}")
-    
+        with open(file_path, encoding='utf-8') as f:
+            exclude_config.read_file(f)
+
     # デフォルト値を設定
     if not exclude_config.has_section('ExcludeItems'):
         exclude_config.add_section('ExcludeItems')
@@ -92,18 +89,15 @@ def _load_exclude_items_config(config: configparser.ConfigParser) -> configparse
 def _load_replacements_config(config: configparser.ConfigParser) -> configparser.ConfigParser:
     """
     replacements.txt から置換項目設定を読み込む
-    ファイルが存在しない場合はデフォルト値を返す
+    ファイルが存在しない場合はデフォルト値を返す（存在するのに読めない場合は例外）
     """
     replacements_config = configparser.ConfigParser()
     file_path = _get_replacements_file_path(config)
     
     if file_path and os.path.exists(file_path):
-        try:
-            with open(file_path, encoding='utf-8') as f:
-                replacements_config.read_file(f)
-        except Exception as e:
-            print(f"置換項目ファイルの読み込みエラー: {e}")
-    
+        with open(file_path, encoding='utf-8') as f:
+            replacements_config.read_file(f)
+
     # デフォルト値を設定
     if not replacements_config.has_section('Replacements'):
         replacements_config.add_section('Replacements')
@@ -120,12 +114,8 @@ def _save_exclude_items_config(config: configparser.ConfigParser, exclude_config
     if not file_path:
         raise ValueError("excludeitems_file のパスが設定されていません")
     
-    try:
-        with open(file_path, 'w', encoding='utf-8') as f:
-            exclude_config.write(f)
-    except Exception as e:
-        print(f"除外項目ファイルの保存エラー: {e}")
-        raise
+    with open(file_path, 'w', encoding='utf-8') as f:
+        exclude_config.write(f)
 
 
 def _save_replacements_config(config: configparser.ConfigParser, replacements_config: configparser.ConfigParser) -> None:
@@ -134,28 +124,14 @@ def _save_replacements_config(config: configparser.ConfigParser, replacements_co
     if not file_path:
         raise ValueError("replacements_file のパスが設定されていません")
     
-    try:
-        with open(file_path, 'w', encoding='utf-8') as f:
-            replacements_config.write(f)
-    except Exception as e:
-        print(f"置換項目ファイルの保存エラー: {e}")
-        raise
+    with open(file_path, 'w', encoding='utf-8') as f:
+        replacements_config.write(f)
 
 
 def load_config() -> configparser.ConfigParser:
     config = configparser.ConfigParser()
-    try:
-        with open(CONFIG_PATH, encoding='utf-8') as f:
-            config.read_file(f)
-    except FileNotFoundError:
-        print(f"設定ファイルが見つかりません: {CONFIG_PATH}")
-        raise
-    except PermissionError:
-        print(f"設定ファイルを読み取る権限がありません: {CONFIG_PATH}")
-        raise
-    except configparser.Error as e:
-        print(f"設定ファイルの解析中にエラーが発生しました: {e}")
-        raise
+    with open(CONFIG_PATH, encoding='utf-8') as f:
+        config.read_file(f)
 
     # 不足しているセクションにデフォルト値を追加
     _ensure_default_sections(config)
@@ -163,15 +139,8 @@ def load_config() -> configparser.ConfigParser:
 
 
 def save_config(config: configparser.ConfigParser):
-    try:
-        with open(CONFIG_PATH, 'w', encoding='utf-8') as configfile:
-            config.write(configfile)
-    except PermissionError:
-        print(f"設定ファイルを書き込む権限がありません: {CONFIG_PATH}")
-        raise
-    except IOError as e:
-        print(f"設定ファイルの保存中にエラーが発生しました: {e}")
-        raise
+    with open(CONFIG_PATH, 'w', encoding='utf-8') as configfile:
+        config.write(configfile)
 
 
 def _ensure_default_sections(config: configparser.ConfigParser) -> None:

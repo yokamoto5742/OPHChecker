@@ -81,6 +81,8 @@ class ReplacementsDialog(BaseDialog):
         def on_ok() -> None:
             key = entry_key.get().strip()
             value = entry_value.get().strip()
+            if self._warn_forbidden_characters([key, value], dialog):
+                return
             if key and value:
                 if key in replacements_dict:
                     messagebox.showwarning("警告", "同じ値が既に存在します", parent=dialog)
@@ -151,6 +153,8 @@ class ReplacementsDialog(BaseDialog):
         def on_ok() -> None:
             new_key = entry_key.get().strip()
             new_value = entry_value.get().strip()
+            if self._warn_forbidden_characters([new_key, new_value], dialog):
+                return
             if new_key and new_value:
                 # キーが変更された場合、既存のキーとの重複をチェック
                 if new_key != current_key and new_key in replacements_dict:

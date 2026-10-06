@@ -1,5 +1,9 @@
 import tkinter as tk
 from abc import ABC, abstractmethod
+from tkinter import messagebox
+
+# txtの保存形式で区切り文字・補間記号として使われるため入力できない文字
+FORBIDDEN_CHARACTERS = ',:%'
 
 
 class BaseDialog(ABC):
@@ -106,6 +110,13 @@ class BaseDialog(ABC):
             width=10,
         )
         delete_button.pack(side=tk.LEFT, padx=2)
+
+    def _warn_forbidden_characters(self, values: list[str], parent: tk.Toplevel) -> bool:
+        """入力値に使用できない文字が含まれていれば警告を表示してTrueを返す"""
+        if any(character in value for value in values for character in FORBIDDEN_CHARACTERS):
+            messagebox.showwarning("警告", "「,」「:」「%」は使用できません", parent=parent)
+            return True
+        return False
 
     def _center_window(self) -> None:
         self.dialog.update_idletasks()

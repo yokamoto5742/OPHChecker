@@ -81,6 +81,8 @@ class ExcludeItemsDialog(BaseDialog):
 
         def on_ok() -> None:
             value = entry.get().strip()
+            if self._warn_forbidden_characters([value], dialog):
+                return
             if value:
                 item_list.append(value)
                 listbox.insert(tk.END, value)
@@ -131,6 +133,8 @@ class ExcludeItemsDialog(BaseDialog):
 
         def on_ok() -> None:
             value = entry.get().strip()
+            if self._warn_forbidden_characters([value], dialog):
+                return
             if value:
                 item_list[index] = value
                 listbox.delete(index)

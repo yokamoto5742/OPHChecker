@@ -130,6 +130,27 @@ def test_exclude_items_dialog_delete_item_no_selection(root):
         mock_showwarning.assert_called_once()
 
 
+@pytest.mark.parametrize('value', ['a,b', '10:30', '50%'])
+def test_exclude_items_dialog_warns_forbidden_characters(root, value):
+    """保存形式を壊す文字を含む入力は警告して拒否する"""
+    dialog = ExcludeItemsDialog(root, [], [])
+
+    with patch('tkinter.messagebox.showwarning') as mock_showwarning:
+        assert dialog._warn_forbidden_characters(['キーワード', value], dialog.dialog) is True
+
+        mock_showwarning.assert_called_once()
+
+
+def test_exclude_items_dialog_accepts_normal_characters(root):
+    """括弧などの通常の文字は拒否しない"""
+    dialog = ExcludeItemsDialog(root, [], [])
+
+    with patch('tkinter.messagebox.showwarning') as mock_showwarning:
+        assert dialog._warn_forbidden_characters(['(トーリック)', '★'], dialog.dialog) is False
+
+        mock_showwarning.assert_not_called()
+
+
 def test_exclude_items_dialog_has_two_tabs(root):
     """2つのタブがある"""
     keywords = []

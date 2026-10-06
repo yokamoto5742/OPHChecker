@@ -32,6 +32,7 @@ def mock_config():
     config.get.side_effect = lambda section, key, fallback='': {
         ('Paths', 'surgery_search_data'): 'C:\\test\\search.csv',
         ('Paths', 'surgery_schedule'): 'C:\\test\\schedule.xlsx',
+        ('Paths', 'template_path'): 'C:\\test\\template.xlsx',
         ('Paths', 'output_path'): 'C:\\test\\output',
         ('Paths', 'input_path'): 'C:\\test\\input',
     }.get((section, key), fallback)
@@ -102,6 +103,68 @@ def test_oph_checker_gui_validate_config_missing_file(root, mock_config):
 
                 assert result is False
                 mock_error.assert_called()
+
+
+def test_oph_checker_gui_validate_config_allows_missing_output_folder(root, mock_config):
+    """出力フォルダが無くても入力ファイルがあれば検証は成功する"""
+    with patch('app.main_window.load_config') as mock_load_config:
+        mock_load_config.return_value = mock_config
+
+        with patch('pathlib.Path.exists', autospec=True) as mock_exists:
+            mock_exists.side_effect = lambda path: str(path) != 'C:\\test\\output'
+
+            gui = OPHCheckerGUI(root)
+
+            assert gui._validate_config() is True
+
+
+def test_oph_checker_gui_validate_config_requires_template(root, mock_config):
+    """テンプレートが無い場合は検証失敗"""
+    with patch('app.main_window.load_config') as mock_load_config:
+        mock_load_config.return_value = mock_config
+
+        with patch('pathlib.Path.exists', autospec=True) as mock_exists:
+            mock_exists.side_effect = lambda path: str(path) != 'C:\\test\\template.xlsx'
+
+            with patch('tkinter.messagebox.showerror') as mock_error:
+                gui = OPHCheckerGUI(root)
+
+                assert gui._validate_config() is False
+                mock_error.assert_called_once()
+
+
+def test_oph_checker_gui_create_output_folders(root, mock_config, tmp_path):
+    """出力先フォルダが無ければ作成される"""
+    paths = {
+        'output_path': str(tmp_path / 'output'),
+        'processed_surgery_schedule': str(tmp_path / 'processed' / 'schedule.csv'),
+        'processed_surgery_search_data': str(tmp_path / 'processed' / 'search.csv'),
+        'comparison_result': str(tmp_path / 'comparison' / 'result.csv'),
+    }
+    with patch('app.main_window.load_config') as mock_load_config:
+        mock_load_config.return_value = mock_config
+
+        gui = OPHCheckerGUI(root)
+        gui._create_output_folders(paths)
+
+    assert (tmp_path / 'output').is_dir()
+    assert (tmp_path / 'processed').is_dir()
+    assert (tmp_path / 'comparison').is_dir()
+
+
+def test_oph_checker_gui_completion_summary_with_no_rows(root, mock_config, tmp_path):
+    """除外の結果0件でも完了サマリーでエラーにならない"""
+    empty_csv = tmp_path / 'processed_search.csv'
+    empty_csv.write_text('手術日,患者ID\n', encoding='cp932')
+
+    with patch('app.main_window.load_config') as mock_load_config:
+        mock_load_config.return_value = mock_config
+
+        gui = OPHCheckerGUI(root)
+        gui._log_completion_summary(str(empty_csv))
+
+        assert '対象データはありませんでした' in gui.log_text.get('1.0', tk.END)
+        assert gui.status_var.get() == '処理完了'
 
 
 def test_oph_checker_gui_start_analysis_validates_config(root, mock_config):
