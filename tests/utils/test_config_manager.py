@@ -1,6 +1,5 @@
 import configparser
-import os
-import tempfile
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -21,10 +20,10 @@ from utils.config_manager import (
 
 
 @pytest.fixture
-def temp_config_file():
+def temp_config_file(tmp_path: Path) -> str:
     """一時的な設定ファイルを作成"""
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.ini', encoding='utf-8') as f:
-        f.write("""[Appearance]
+    config_path = tmp_path / 'config.ini'
+    config_path.write_text(f"""[Appearance]
 font_size = 11
 log_font_size = 9
 window_width = 350
@@ -48,21 +47,15 @@ processed_surgery_schedule = C:\\test\\processed_schedule.csv
 comparison_result = C:\\test\\comparison.csv
 template_path = C:\\test\\template.xlsx
 output_path = C:\\test\\output
+excludeitems_file = {tmp_path / 'excludeitems.txt'}
+replacements_file = {tmp_path / 'replacements.txt'}
 
 [Replacements]
 anesthesia_replacements = 球後麻酔:局所,点眼麻酔:局所
 surgeon_replacements = 橋本義弘:橋本,植田芳樹:植田
 inpatient_replacements = あやめ:入院,外来:外来
-""")
-        temp_path = f.name
-
-    yield temp_path
-
-    # クリーンアップ
-    try:
-        os.unlink(temp_path)
-    except:
-        pass
+""", encoding='utf-8')
+    return str(config_path)
 
 
 def test_load_config_success(temp_config_file):
