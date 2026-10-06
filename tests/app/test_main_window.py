@@ -260,21 +260,21 @@ def test_oph_checker_gui_open_exclude_items(root, mock_config):
     with patch('app.main_window.load_config') as mock_load_config:
         mock_load_config.return_value = mock_config
 
-        with patch('app.main_window.get_exclusion_line_keywords') as mock_get_keywords:
-            mock_get_keywords.return_value = []
+        with patch('app.main_window.get_exclude_items') as mock_get_exclude_items:
+            mock_get_exclude_items.return_value = {
+                'exclusion_line_keywords': [],
+                'surgery_strings_to_remove': [],
+            }
 
-            with patch('app.main_window.get_surgery_strings_to_remove') as mock_get_strings:
-                mock_get_strings.return_value = []
+            with patch('app.main_window.ExcludeItemsDialog') as mock_dialog:
+                mock_dialog_instance = MagicMock()
+                mock_dialog_instance.show.return_value = None  # キャンセル
+                mock_dialog.return_value = mock_dialog_instance
 
-                with patch('app.main_window.ExcludeItemsDialog') as mock_dialog:
-                    mock_dialog_instance = MagicMock()
-                    mock_dialog_instance.show.return_value = None  # キャンセル
-                    mock_dialog.return_value = mock_dialog_instance
+                gui = OPHCheckerGUI(root)
+                gui._open_exclude_items()
 
-                    gui = OPHCheckerGUI(root)
-                    gui._open_exclude_items()
-
-                    mock_dialog.assert_called_once()
+                mock_dialog.assert_called_once()
 
 
 def test_oph_checker_gui_open_replacements(root, mock_config):
@@ -282,8 +282,12 @@ def test_oph_checker_gui_open_replacements(root, mock_config):
     with patch('app.main_window.load_config') as mock_load_config:
         mock_load_config.return_value = mock_config
 
-        with patch('app.main_window.get_replacement_dict') as mock_get_replacement:
-            mock_get_replacement.return_value = {}
+        with patch('app.main_window.get_replacements') as mock_get_replacements:
+            mock_get_replacements.return_value = {
+                'anesthesia_replacements': {},
+                'surgeon_replacements': {},
+                'inpatient_replacements': {},
+            }
 
             with patch('app.main_window.ReplacementsDialog') as mock_dialog:
                 mock_dialog_instance = MagicMock()

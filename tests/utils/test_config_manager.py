@@ -6,15 +6,13 @@ import pytest
 
 from utils.config_manager import (
     get_appearance_settings,
-    get_exclusion_line_keywords,
+    get_exclude_items,
     get_paths,
-    get_replacement_dict,
-    get_surgery_strings_to_remove,
+    get_replacements,
     load_config,
     save_config,
-    save_exclusion_line_keywords,
-    save_replacement_dict,
-    save_surgery_strings_to_remove,
+    save_exclude_items,
+    save_replacements,
 )
 
 
@@ -94,45 +92,39 @@ def test_get_paths(temp_config_file):
         assert paths['output_path'] == 'C:\\test\\output'
 
 
-def test_get_exclusion_line_keywords(temp_config_file):
-    """行除外キーワードを取得できる"""
+def test_get_exclude_items_returns_defaults_without_file(temp_config_file):
+    """txtが無い場合は除外設定の既定値を取得できる"""
     with patch('utils.config_manager.CONFIG_PATH', temp_config_file):
         config = load_config()
-        keywords = get_exclusion_line_keywords(config)
+        exclude_items = get_exclude_items(config)
 
-        assert '★' in keywords
-        assert '霰粒腫' in keywords
-        assert '術式未定' in keywords
+        assert '★' in exclude_items['exclusion_line_keywords']
+        assert '霰粒腫' in exclude_items['exclusion_line_keywords']
+        assert '(トーリック)' in exclude_items['surgery_strings_to_remove']
+        assert '(inject)' in exclude_items['surgery_strings_to_remove']
 
 
-def test_get_surgery_strings_to_remove(temp_config_file):
-    """手術文字列削除リストを取得できる"""
+def test_get_replacements_returns_defaults_without_file(temp_config_file):
+    """txtが無い場合は置換設定の既定値を取得できる"""
     with patch('utils.config_manager.CONFIG_PATH', temp_config_file):
         config = load_config()
-        strings = get_surgery_strings_to_remove(config)
+        replacements = get_replacements(config)
 
-        assert '(トーリック)' in strings
-        assert '(inject)' in strings
+        assert replacements['anesthesia_replacements']['球後麻酔'] == '局所'
+        assert replacements['surgeon_replacements']['橋本義弘'] == '橋本'
+        assert replacements['inpatient_replacements']['あやめ'] == '入院'
 
 
-def test_get_replacement_dict(temp_config_file):
-    """置換辞書を取得できる"""
+def test_get_replacements_empty_value(temp_config_file, tmp_path):
+    """値が空の置換設定は空の辞書になる"""
+    (tmp_path / 'replacements.txt').write_text(
+        '[Replacements]\nanesthesia_replacements =\n', encoding='utf-8'
+    )
+
     with patch('utils.config_manager.CONFIG_PATH', temp_config_file):
         config = load_config()
-        anesthesia = get_replacement_dict(config, 'Replacements', 'anesthesia_replacements')
 
-        assert anesthesia['球後麻酔'] == '局所'
-        assert anesthesia['点眼麻酔'] == '局所'
-
-
-def test_get_replacement_dict_empty():
-    """空の置換辞書を取得できる"""
-    config = configparser.ConfigParser()
-    config.add_section('Test')
-    config.set('Test', 'empty', '')
-
-    result = get_replacement_dict(config, 'Test', 'empty')
-    assert result == {}
+        assert get_replacements(config)['anesthesia_replacements'] == {}
 
 
 def test_broken_exclude_items_file_raises_and_is_not_overwritten(temp_config_file, tmp_path):
@@ -145,9 +137,9 @@ def test_broken_exclude_items_file_raises_and_is_not_overwritten(temp_config_fil
         config = load_config()
 
         with pytest.raises(configparser.Error):
-            get_exclusion_line_keywords(config)
+            get_exclude_items(config)
         with pytest.raises(configparser.Error):
-            save_exclusion_line_keywords(config, ['キーワード1'])
+            save_exclude_items(config, {'exclusion_line_keywords': ['キーワード1']})
 
     assert exclude_items_file.read_text(encoding='utf-8') == broken_text
 
@@ -160,53 +152,39 @@ def test_broken_replacements_file_raises(temp_config_file, tmp_path):
         config = load_config()
 
         with pytest.raises(configparser.Error):
-            get_replacement_dict(config, 'Replacements', 'anesthesia_replacements')
+            get_replacements(config)
 
 
-def test_save_replacement_dict(temp_config_file):
-    """置換辞書を保存できる"""
+def test_save_replacements(temp_config_file):
+    """置換設定を保存できる"""
     with patch('utils.config_manager.CONFIG_PATH', temp_config_file):
         config = load_config()
-        new_dict = {'テスト1': '置換1', 'テスト2': '置換2'}
+        new_replacements = {
+            'anesthesia_replacements': {'テスト1': '置換1', 'テスト2': '置換2'},
+            'surgeon_replacements': {'医師1': '置換3'},
+            'inpatient_replacements': {},
+        }
 
-        save_replacement_dict(config, 'Replacements', 'anesthesia_replacements', new_dict)
-        save_config(config)
+        save_replacements(config, new_replacements)
 
-        # 再読み込みして確認
-        config2 = load_config()
-        result = get_replacement_dict(config2, 'Replacements', 'anesthesia_replacements')
-        assert result['テスト1'] == '置換1'
-        assert result['テスト2'] == '置換2'
+        assert get_replacements(load_config()) == new_replacements
 
 
-def test_save_exclusion_line_keywords(temp_config_file):
-    """行除外キーワードを保存できる"""
+def test_save_exclude_items(temp_config_file):
+    """除外設定を保存できる"""
     with patch('utils.config_manager.CONFIG_PATH', temp_config_file):
         config = load_config()
-        new_keywords = ['キーワード1', 'キーワード2', 'キーワード3']
+        new_exclude_items = {
+            'exclusion_line_keywords': ['キーワード1', 'キーワード2', 'キーワード3'],
+            'surgery_strings_to_remove': ['文字列1', '文字列2'],
+        }
 
-        save_exclusion_line_keywords(config, new_keywords)
-        save_config(config)
+        save_exclude_items(config, new_exclude_items)
 
-        # 再読み込みして確認
-        config2 = load_config()
-        result = get_exclusion_line_keywords(config2)
-        assert 'キーワード1' in result
-        assert 'キーワード2' in result
-        assert 'キーワード3' in result
+        assert get_exclude_items(load_config()) == new_exclude_items
 
 
-def test_save_surgery_strings_to_remove(temp_config_file):
-    """手術文字列削除リストを保存できる"""
-    with patch('utils.config_manager.CONFIG_PATH', temp_config_file):
-        config = load_config()
-        new_strings = ['文字列1', '文字列2']
-
-        save_surgery_strings_to_remove(config, new_strings)
-        save_config(config)
-
-        # 再読み込みして確認
-        config2 = load_config()
-        result = get_surgery_strings_to_remove(config2)
-        assert '文字列1' in result
-        assert '文字列2' in result
+def test_save_without_file_path_raises():
+    """txtのパスが未設定の場合は保存できない"""
+    with pytest.raises(ValueError):
+        save_exclude_items(configparser.ConfigParser(), {'exclusion_line_keywords': ['キーワード1']})

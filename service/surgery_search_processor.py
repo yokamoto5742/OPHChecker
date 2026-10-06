@@ -5,10 +5,9 @@ import unicodedata
 from datetime import datetime
 
 from utils.config_manager import (
-    get_exclusion_line_keywords,
+    get_exclude_items,
     get_paths,
-    get_replacement_dict,
-    get_surgery_strings_to_remove,
+    get_replacements,
     load_config,
 )
 from utils.csv_table import (
@@ -58,21 +57,19 @@ def _convert_surgery_date_format(rows: list[CsvRow]) -> list[CsvRow]:
 
 def _apply_replacements(rows: list[CsvRow], config: configparser.ConfigParser) -> list[CsvRow]:
     """麻酔、術者、入外の値を置換"""
-    anesthesia_replacements = get_replacement_dict(config, 'Replacements', 'anesthesia_replacements')
-    surgeon_replacements = get_replacement_dict(config, 'Replacements', 'surgeon_replacements')
-    inpatient_replacements = get_replacement_dict(config, 'Replacements', 'inpatient_replacements')
+    replacements = get_replacements(config)
 
     for row in rows:
-        row['麻酔'] = anesthesia_replacements.get(row['麻酔'], row['麻酔'])
-        row['医師'] = surgeon_replacements.get(row['医師'], row['医師'])
-        row['入外'] = inpatient_replacements.get(row['入外'], row['入外'])
+        row['麻酔'] = replacements['anesthesia_replacements'].get(row['麻酔'], row['麻酔'])
+        row['医師'] = replacements['surgeon_replacements'].get(row['医師'], row['医師'])
+        row['入外'] = replacements['inpatient_replacements'].get(row['入外'], row['入外'])
 
     return rows
 
 
 def _remove_surgery_strings(rows: list[CsvRow], config: configparser.ConfigParser) -> list[CsvRow]:
     """手術列から特定の文字列を削除"""
-    surgery_strings_to_remove = get_surgery_strings_to_remove(config)
+    surgery_strings_to_remove = get_exclude_items(config)['surgery_strings_to_remove']
     for row in rows:
         for string in surgery_strings_to_remove:
             row['手術'] = row['手術'].replace(string, '')
@@ -81,7 +78,7 @@ def _remove_surgery_strings(rows: list[CsvRow], config: configparser.ConfigParse
 
 def _filter_exclusion_keywords(rows: list[CsvRow], config: configparser.ConfigParser) -> list[CsvRow]:
     """氏名列または手術列で特定の文字列が含まれている行を削除"""
-    exclusion_line_keywords = get_exclusion_line_keywords(config)
+    exclusion_line_keywords = get_exclude_items(config)['exclusion_line_keywords']
     return [
         row for row in rows
         if not any(

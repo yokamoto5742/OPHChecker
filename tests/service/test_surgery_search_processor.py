@@ -22,6 +22,26 @@ def mock_config():
 
 
 @pytest.fixture
+def mock_settings():
+    """設定ファイルと外部txtの読み込みをモックに差し替える"""
+    replacements = {
+        'anesthesia_replacements': {'球後麻酔': '局所', '点眼麻酔': '局所', '全身麻酔': '全身', '局所麻酔': '局所'},
+        'surgeon_replacements': {'橋本義弘': '橋本', '植田芳樹': '植田', '増子杏': '増子', '田中伸弥': '田中'},
+        'inpatient_replacements': {'あやめ': '入院', 'さくら': '入院', '外来': '外来'},
+    }
+    exclude_items = {
+        'exclusion_line_keywords': ['★', '霰粒腫'],
+        'surgery_strings_to_remove': ['(トーリック)', '(inject)'],
+    }
+    with (
+        patch('service.surgery_search_processor.load_config'),
+        patch('service.surgery_search_processor.get_replacements', return_value=replacements),
+        patch('service.surgery_search_processor.get_exclude_items', return_value=exclude_items),
+    ):
+        yield
+
+
+@pytest.fixture
 def temp_csv_file():
     """一時的なCSVファイルを作成"""
     temp_dir = tempfile.mkdtemp()
@@ -51,57 +71,16 @@ def temp_csv_file():
         pass
 
 
-def test_process_eye_surgery_data_creates_output_file(temp_csv_file):
+def test_process_eye_surgery_data_creates_output_file(temp_csv_file, mock_settings):
     """処理結果ファイルが作成される"""
-    with patch('service.surgery_search_processor.load_config') as mock_load_config:
-        mock_config = MagicMock()
-        mock_load_config.return_value = mock_config
-
-        # モック設定を返す
-        with patch('service.surgery_search_processor.get_replacement_dict') as mock_get_replacement:
-            mock_get_replacement.side_effect = [
-                {'球後麻酔': '局所', '点眼麻酔': '局所', '全身麻酔': '全身', '局所麻酔': '局所'},  # anesthesia
-                {'橋本義弘': '橋本', '植田芳樹': '植田', '増子杏': '増子', '田中伸弥': '田中'},  # surgeon
-                {'あやめ': '入院', 'さくら': '入院', '外来': '外来'}  # inpatient
-            ]
-
-            with patch('service.surgery_search_processor.get_surgery_strings_to_remove') as mock_get_surgery:
-                mock_get_surgery.return_value = ['(トーリック)', '(inject)']
-
-                with patch('service.surgery_search_processor.get_exclusion_line_keywords') as mock_get_exclusion:
-                    mock_get_exclusion.return_value = ['★', '霰粒腫']
-
-                    process_eye_surgery_data(
-                        temp_csv_file['input'],
-                        temp_csv_file['output']
-                    )
+    process_eye_surgery_data(temp_csv_file['input'], temp_csv_file['output'])
 
     assert Path(temp_csv_file['output']).exists()
 
 
-def test_process_eye_surgery_data_correct_columns(temp_csv_file):
+def test_process_eye_surgery_data_correct_columns(temp_csv_file, mock_settings):
     """正しい列が出力される"""
-    with patch('service.surgery_search_processor.load_config') as mock_load_config:
-        mock_config = MagicMock()
-        mock_load_config.return_value = mock_config
-
-        with patch('service.surgery_search_processor.get_replacement_dict') as mock_get_replacement:
-            mock_get_replacement.side_effect = [
-                {'球後麻酔': '局所', '点眼麻酔': '局所', '全身麻酔': '全身', '局所麻酔': '局所'},
-                {'橋本義弘': '橋本', '植田芳樹': '植田', '増子杏': '増子', '田中伸弥': '田中'},
-                {'あやめ': '入院', 'さくら': '入院', '外来': '外来'}
-            ]
-
-            with patch('service.surgery_search_processor.get_surgery_strings_to_remove') as mock_get_surgery:
-                mock_get_surgery.return_value = ['(トーリック)', '(inject)']
-
-                with patch('service.surgery_search_processor.get_exclusion_line_keywords') as mock_get_exclusion:
-                    mock_get_exclusion.return_value = ['★', '霰粒腫']
-
-                    process_eye_surgery_data(
-                        temp_csv_file['input'],
-                        temp_csv_file['output']
-                    )
+    process_eye_surgery_data(temp_csv_file['input'], temp_csv_file['output'])
 
     rows = read_csv_rows(temp_csv_file['output'])
 
@@ -109,29 +88,9 @@ def test_process_eye_surgery_data_correct_columns(temp_csv_file):
     assert list(rows[0].keys()) == expected_columns
 
 
-def test_process_eye_surgery_data_date_conversion(temp_csv_file):
+def test_process_eye_surgery_data_date_conversion(temp_csv_file, mock_settings):
     """日付がYYYY/MM/DD形式に変換される"""
-    with patch('service.surgery_search_processor.load_config') as mock_load_config:
-        mock_config = MagicMock()
-        mock_load_config.return_value = mock_config
-
-        with patch('service.surgery_search_processor.get_replacement_dict') as mock_get_replacement:
-            mock_get_replacement.side_effect = [
-                {'球後麻酔': '局所', '点眼麻酔': '局所', '全身麻酔': '全身', '局所麻酔': '局所'},
-                {'橋本義弘': '橋本', '植田芳樹': '植田', '増子杏': '増子', '田中伸弥': '田中'},
-                {'あやめ': '入院', 'さくら': '入院', '外来': '外来'}
-            ]
-
-            with patch('service.surgery_search_processor.get_surgery_strings_to_remove') as mock_get_surgery:
-                mock_get_surgery.return_value = ['(トーリック)', '(inject)']
-
-                with patch('service.surgery_search_processor.get_exclusion_line_keywords') as mock_get_exclusion:
-                    mock_get_exclusion.return_value = ['★', '霰粒腫']
-
-                    process_eye_surgery_data(
-                        temp_csv_file['input'],
-                        temp_csv_file['output']
-                    )
+    process_eye_surgery_data(temp_csv_file['input'], temp_csv_file['output'])
 
     rows = read_csv_rows(temp_csv_file['output'])
 
@@ -195,122 +154,43 @@ def test_filter_exclusion_keywords_matches_as_plain_text(keyword, expected_names
         {'氏名': '患者B', '手術': '白内障手術'},
     ]
 
-    with patch('service.surgery_search_processor.get_exclusion_line_keywords', return_value=[keyword]):
+    with patch('service.surgery_search_processor.get_exclude_items',
+               return_value={'exclusion_line_keywords': [keyword]}):
         filtered_rows = _filter_exclusion_keywords(rows, MagicMock())
 
     assert [row['氏名'] for row in filtered_rows] == expected_names
 
 
-def test_process_eye_surgery_data_anesthesia_replacement(temp_csv_file):
+def test_process_eye_surgery_data_anesthesia_replacement(temp_csv_file, mock_settings):
     """麻酔の値が置換される"""
-    with patch('service.surgery_search_processor.load_config') as mock_load_config:
-        mock_config = MagicMock()
-        mock_load_config.return_value = mock_config
-
-        with patch('service.surgery_search_processor.get_replacement_dict') as mock_get_replacement:
-            mock_get_replacement.side_effect = [
-                {'球後麻酔': '局所', '点眼麻酔': '局所', '全身麻酔': '全身', '局所麻酔': '局所'},
-                {'橋本義弘': '橋本', '植田芳樹': '植田', '増子杏': '増子', '田中伸弥': '田中'},
-                {'あやめ': '入院', 'さくら': '入院', '外来': '外来'}
-            ]
-
-            with patch('service.surgery_search_processor.get_surgery_strings_to_remove') as mock_get_surgery:
-                mock_get_surgery.return_value = ['(トーリック)', '(inject)']
-
-                with patch('service.surgery_search_processor.get_exclusion_line_keywords') as mock_get_exclusion:
-                    mock_get_exclusion.return_value = ['★', '霰粒腫']
-
-                    process_eye_surgery_data(
-                        temp_csv_file['input'],
-                        temp_csv_file['output']
-                    )
+    process_eye_surgery_data(temp_csv_file['input'], temp_csv_file['output'])
 
     rows = read_csv_rows(temp_csv_file['output'])
 
     assert rows[0]['麻酔'] == '局所'  # 球後麻酔 -> 局所
 
 
-def test_process_eye_surgery_data_surgeon_replacement(temp_csv_file):
+def test_process_eye_surgery_data_surgeon_replacement(temp_csv_file, mock_settings):
     """医師名が置換される"""
-    with patch('service.surgery_search_processor.load_config') as mock_load_config:
-        mock_config = MagicMock()
-        mock_load_config.return_value = mock_config
-
-        with patch('service.surgery_search_processor.get_replacement_dict') as mock_get_replacement:
-            mock_get_replacement.side_effect = [
-                {'球後麻酔': '局所', '点眼麻酔': '局所', '全身麻酔': '全身', '局所麻酔': '局所'},
-                {'橋本義弘': '橋本', '植田芳樹': '植田', '増子杏': '増子', '田中伸弥': '田中'},
-                {'あやめ': '入院', 'さくら': '入院', '外来': '外来'}
-            ]
-
-            with patch('service.surgery_search_processor.get_surgery_strings_to_remove') as mock_get_surgery:
-                mock_get_surgery.return_value = ['(トーリック)', '(inject)']
-
-                with patch('service.surgery_search_processor.get_exclusion_line_keywords') as mock_get_exclusion:
-                    mock_get_exclusion.return_value = ['★', '霰粒腫']
-
-                    process_eye_surgery_data(
-                        temp_csv_file['input'],
-                        temp_csv_file['output']
-                    )
+    process_eye_surgery_data(temp_csv_file['input'], temp_csv_file['output'])
 
     rows = read_csv_rows(temp_csv_file['output'])
 
     assert rows[0]['医師'] == '橋本'  # 橋本義弘 -> 橋本
 
 
-def test_process_eye_surgery_data_removes_surgery_strings(temp_csv_file):
+def test_process_eye_surgery_data_removes_surgery_strings(temp_csv_file, mock_settings):
     """手術名から特定文字列が削除される"""
-    with patch('service.surgery_search_processor.load_config') as mock_load_config:
-        mock_config = MagicMock()
-        mock_load_config.return_value = mock_config
-
-        with patch('service.surgery_search_processor.get_replacement_dict') as mock_get_replacement:
-            mock_get_replacement.side_effect = [
-                {'球後麻酔': '局所', '点眼麻酔': '局所', '全身麻酔': '全身', '局所麻酔': '局所'},
-                {'橋本義弘': '橋本', '植田芳樹': '植田', '増子杏': '増子', '田中伸弥': '田中'},
-                {'あやめ': '入院', 'さくら': '入院', '外来': '外来'}
-            ]
-
-            with patch('service.surgery_search_processor.get_surgery_strings_to_remove') as mock_get_surgery:
-                mock_get_surgery.return_value = ['(トーリック)', '(inject)']
-
-                with patch('service.surgery_search_processor.get_exclusion_line_keywords') as mock_get_exclusion:
-                    mock_get_exclusion.return_value = ['★', '霰粒腫']
-
-                    process_eye_surgery_data(
-                        temp_csv_file['input'],
-                        temp_csv_file['output']
-                    )
+    process_eye_surgery_data(temp_csv_file['input'], temp_csv_file['output'])
 
     rows = read_csv_rows(temp_csv_file['output'])
 
     assert '(トーリック)' not in rows[0]['手術']
 
 
-def test_process_eye_surgery_data_creates_eye_field(temp_csv_file):
+def test_process_eye_surgery_data_creates_eye_field(temp_csv_file, mock_settings):
     """術眼列が正しく作成される"""
-    with patch('service.surgery_search_processor.load_config') as mock_load_config:
-        mock_config = MagicMock()
-        mock_load_config.return_value = mock_config
-
-        with patch('service.surgery_search_processor.get_replacement_dict') as mock_get_replacement:
-            mock_get_replacement.side_effect = [
-                {'球後麻酔': '局所', '点眼麻酔': '局所', '全身麻酔': '全身', '局所麻酔': '局所'},
-                {'橋本義弘': '橋本', '植田芳樹': '植田', '増子杏': '増子', '田中伸弥': '田中'},
-                {'あやめ': '入院', 'さくら': '入院', '外来': '外来'}
-            ]
-
-            with patch('service.surgery_search_processor.get_surgery_strings_to_remove') as mock_get_surgery:
-                mock_get_surgery.return_value = ['(トーリック)', '(inject)']
-
-                with patch('service.surgery_search_processor.get_exclusion_line_keywords') as mock_get_exclusion:
-                    mock_get_exclusion.return_value = ['★', '霰粒腫']
-
-                    process_eye_surgery_data(
-                        temp_csv_file['input'],
-                        temp_csv_file['output']
-                    )
+    process_eye_surgery_data(temp_csv_file['input'], temp_csv_file['output'])
 
     rows = read_csv_rows(temp_csv_file['output'])
 
@@ -319,29 +199,9 @@ def test_process_eye_surgery_data_creates_eye_field(temp_csv_file):
     assert rows[2]['術眼'] == 'B'  # 両眼
 
 
-def test_process_eye_surgery_data_excludes_keywords(temp_csv_file):
+def test_process_eye_surgery_data_excludes_keywords(temp_csv_file, mock_settings):
     """除外キーワードを含む行が削除される"""
-    with patch('service.surgery_search_processor.load_config') as mock_load_config:
-        mock_config = MagicMock()
-        mock_load_config.return_value = mock_config
-
-        with patch('service.surgery_search_processor.get_replacement_dict') as mock_get_replacement:
-            mock_get_replacement.side_effect = [
-                {'球後麻酔': '局所', '点眼麻酔': '局所', '全身麻酔': '全身', '局所麻酔': '局所'},
-                {'橋本義弘': '橋本', '植田芳樹': '植田', '増子杏': '増子', '田中伸弥': '田中'},
-                {'あやめ': '入院', 'さくら': '入院', '外来': '外来'}
-            ]
-
-            with patch('service.surgery_search_processor.get_surgery_strings_to_remove') as mock_get_surgery:
-                mock_get_surgery.return_value = ['(トーリック)', '(inject)']
-
-                with patch('service.surgery_search_processor.get_exclusion_line_keywords') as mock_get_exclusion:
-                    mock_get_exclusion.return_value = ['★', '霰粒腫']
-
-                    process_eye_surgery_data(
-                        temp_csv_file['input'],
-                        temp_csv_file['output']
-                    )
+    process_eye_surgery_data(temp_csv_file['input'], temp_csv_file['output'])
 
     rows = read_csv_rows(temp_csv_file['output'])
 

@@ -13,14 +13,12 @@ from service.surgery_schedule_processor import process_surgery_schedule
 from service.surgery_search_processor import process_eye_surgery_data
 from utils.config_manager import (
     get_appearance_settings,
-    get_exclusion_line_keywords,
+    get_exclude_items,
     get_paths,
-    get_replacement_dict,
-    get_surgery_strings_to_remove,
+    get_replacements,
     load_config,
-    save_exclusion_line_keywords,
-    save_replacement_dict,
-    save_surgery_strings_to_remove,
+    save_exclude_items,
+    save_replacements,
 )
 from utils.csv_table import read_csv_rows
 from widgets.exclude_items_dialog import ExcludeItemsDialog
@@ -313,21 +311,18 @@ class OPHCheckerGUI:
 
     def _open_exclude_items(self) -> None:
         try:
-            # 除外項目を取得
-            exclusion_line_keywords = get_exclusion_line_keywords(self.config)
-            surgery_strings_to_remove = get_surgery_strings_to_remove(self.config)
+            exclude_items = get_exclude_items(self.config)
 
             dialog = ExcludeItemsDialog(
                 self.root,
-                exclusion_line_keywords,
-                surgery_strings_to_remove,
+                exclude_items['exclusion_line_keywords'],
+                exclude_items['surgery_strings_to_remove'],
                 self.font_size,
             )
             result = dialog.show()
 
             if result:
-                save_exclusion_line_keywords(self.config, result['exclusion_line_keywords'])
-                save_surgery_strings_to_remove(self.config, result['surgery_strings_to_remove'])
+                save_exclude_items(self.config, result)
 
                 logging.info("除外項目を保存しました")
                 self._log_message("✓ 除外項目を保存しました")
@@ -340,24 +335,19 @@ class OPHCheckerGUI:
 
     def _open_replacements(self) -> None:
         try:
-            # 置換設定を取得
-            anesthesia_replacements = get_replacement_dict(self.config, 'Replacements', 'anesthesia_replacements')
-            surgeon_replacements = get_replacement_dict(self.config, 'Replacements', 'surgeon_replacements')
-            inpatient_replacements = get_replacement_dict(self.config, 'Replacements', 'inpatient_replacements')
+            replacements = get_replacements(self.config)
 
             dialog = ReplacementsDialog(
                 self.root,
-                anesthesia_replacements,
-                surgeon_replacements,
-                inpatient_replacements,
+                replacements['anesthesia_replacements'],
+                replacements['surgeon_replacements'],
+                replacements['inpatient_replacements'],
                 self.font_size,
             )
             result = dialog.show()
 
             if result:
-                save_replacement_dict(self.config, 'Replacements', 'anesthesia_replacements', result['anesthesia_replacements'])
-                save_replacement_dict(self.config, 'Replacements', 'surgeon_replacements', result['surgeon_replacements'])
-                save_replacement_dict(self.config, 'Replacements', 'inpatient_replacements', result['inpatient_replacements'])
+                save_replacements(self.config, result)
 
                 logging.info("置換設定を保存しました")
                 self._log_message("✓ 置換設定を保存しました")
