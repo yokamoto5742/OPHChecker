@@ -14,7 +14,7 @@ NOT_ENTERED = '未入力'
 OUTPUT_COLUMNS = [
     '手術日', '患者ID', '氏名', '入外', '術眼',
     '手術', '医師', '麻酔', '術前',
-    '手術日_比較', '入外_比較', '術眼_比較',
+    '入外_比較', '術眼_比較',
     '手術_比較', '医師_比較', '麻酔_比較'
 ]
 
@@ -29,7 +29,6 @@ def _normalize_keys(rows: list[CsvRow]) -> None:
 def _compare_row(search_row: CsvRow, schedule_row: CsvRow | None) -> CsvRow:
     """検索データ1行と予定表1行（該当なしはNone）を比較"""
     output_row = dict(search_row)
-    output_row['手術日_比較'] = str(True)
 
     for column in COMPARE_COLUMNS:
         schedule_value = schedule_row[column] if schedule_row else ''

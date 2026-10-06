@@ -6,7 +6,6 @@ import pytest
 
 from utils.config_manager import (
     get_appearance_settings,
-    get_dialog_settings,
     get_exclusion_line_keywords,
     get_paths,
     get_replacement_dict,
@@ -29,15 +28,6 @@ log_font_size = 9
 window_width = 350
 window_height = 350
 
-[DialogSize]
-folder_dialog_width = 600
-folder_dialog_height = 200
-
-[ExcludeItems]
-list =
-exclusion_line_keywords = ★,霰粒腫,術式未定
-surgery_strings_to_remove = (トーリック),(inject)
-
 [Paths]
 input_path = C:\\test\\input
 surgery_search_data = C:\\test\\search.csv
@@ -49,11 +39,6 @@ template_path = C:\\test\\template.xlsx
 output_path = C:\\test\\output
 excludeitems_file = {tmp_path / 'excludeitems.txt'}
 replacements_file = {tmp_path / 'replacements.txt'}
-
-[Replacements]
-anesthesia_replacements = 球後麻酔:局所,点眼麻酔:局所
-surgeon_replacements = 橋本義弘:橋本,植田芳樹:植田
-inpatient_replacements = あやめ:入院,外来:外来
 """, encoding='utf-8')
     return str(config_path)
 
@@ -96,16 +81,6 @@ def test_get_appearance_settings(temp_config_file):
         assert settings['log_font_size'] == 9
         assert settings['window_width'] == 350
         assert settings['window_height'] == 350
-
-
-def test_get_dialog_settings(temp_config_file):
-    """ダイアログ設定を取得できる"""
-    with patch('utils.config_manager.CONFIG_PATH', temp_config_file):
-        config = load_config()
-        settings = get_dialog_settings(config)
-
-        assert settings['folder_dialog_width'] == 600
-        assert settings['folder_dialog_height'] == 200
 
 
 def test_get_paths(temp_config_file):

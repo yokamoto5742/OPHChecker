@@ -70,7 +70,7 @@ def test_compare_surgery_data_correct_columns(temp_csv_files):
     expected_columns = [
         '手術日', '患者ID', '氏名', '入外', '術眼',
         '手術', '医師', '麻酔', '術前',
-        '手術日_比較', '入外_比較', '術眼_比較',
+        '入外_比較', '術眼_比較',
         '手術_比較', '医師_比較', '麻酔_比較'
     ]
 

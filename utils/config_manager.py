@@ -23,12 +23,7 @@ DEFAULT_CONFIG = {
         'window_width': '350',
         'window_height': '350',
     },
-    'DialogSize': {
-        'folder_dialog_width': '600',
-        'folder_dialog_height': '200',
-    },
     'ExcludeItems': {
-        'list': '',
         'exclusion_line_keywords': '★,霰粒腫,術式未定,先天性鼻涙管閉塞開放術',
         'surgery_strings_to_remove': '(クラレオントーリック),(クラレオンパンオプティクス),(クラレオンパンオプティクストーリック),(ビビティ),(ビビティトーリック),(アイハンストーリックⅡ),(トーリック),(inject)',
     },
@@ -161,13 +156,6 @@ def get_appearance_settings(config: configparser.ConfigParser) -> dict:
     }
 
 
-def get_dialog_settings(config: configparser.ConfigParser) -> dict:
-    return {
-        'folder_dialog_width': config.getint('DialogSize', 'folder_dialog_width', fallback=600),
-        'folder_dialog_height': config.getint('DialogSize', 'folder_dialog_height', fallback=200),
-    }
-
-
 def get_paths(config: configparser.ConfigParser) -> dict:
     return {
         'input_path': config.get('Paths', 'input_path', fallback=''),
@@ -179,11 +167,6 @@ def get_paths(config: configparser.ConfigParser) -> dict:
         'template_path': config.get('Paths', 'template_path', fallback=''),
         'output_path': config.get('Paths', 'output_path', fallback=''),
     }
-
-
-def get_exclude_items(config: configparser.ConfigParser) -> list:
-    items_str = config.get('ExcludeItems', 'list', fallback='')
-    return [item.strip() for item in items_str.split(',') if item.strip()]
 
 
 def get_exclusion_line_keywords(config: configparser.ConfigParser) -> list:

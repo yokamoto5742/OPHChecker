@@ -18,7 +18,6 @@ from utils.config_manager import (
     get_replacement_dict,
     get_surgery_strings_to_remove,
     load_config,
-    save_config,
     save_exclusion_line_keywords,
     save_replacement_dict,
     save_surgery_strings_to_remove,
@@ -329,7 +328,6 @@ class OPHCheckerGUI:
             if result:
                 save_exclusion_line_keywords(self.config, result['exclusion_line_keywords'])
                 save_surgery_strings_to_remove(self.config, result['surgery_strings_to_remove'])
-                save_config(self.config)
 
                 logging.info("除外項目を保存しました")
                 self._log_message("✓ 除外項目を保存しました")
@@ -360,7 +358,6 @@ class OPHCheckerGUI:
                 save_replacement_dict(self.config, 'Replacements', 'anesthesia_replacements', result['anesthesia_replacements'])
                 save_replacement_dict(self.config, 'Replacements', 'surgeon_replacements', result['surgeon_replacements'])
                 save_replacement_dict(self.config, 'Replacements', 'inpatient_replacements', result['inpatient_replacements'])
-                save_config(self.config)
 
                 logging.info("置換設定を保存しました")
                 self._log_message("✓ 置換設定を保存しました")
