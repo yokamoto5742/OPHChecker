@@ -2,7 +2,6 @@ import configparser
 import logging
 import re
 import unicodedata
-from collections import Counter
 from datetime import datetime
 
 from utils.config_manager import (
@@ -86,7 +85,7 @@ def _filter_exclusion_keywords(rows: list[CsvRow], config: configparser.ConfigPa
     return [
         row for row in rows
         if not any(
-            re.search(keyword, row[column])
+            keyword in row[column]
             for column in ['氏名', '手術']
             for keyword in exclusion_line_keywords
         )
@@ -108,20 +107,16 @@ def _create_eye_side_column(rows: list[CsvRow]) -> list[CsvRow]:
 
 
 def _handle_duplicates(rows: list[CsvRow]) -> list[CsvRow]:
-    """重複レコードを処理"""
-    key_counts = Counter((row['手術日'], row['患者ID']) for row in rows)
-
-    deduplicated_rows: list[CsvRow] = []
+    """同日・同一患者の行を1行にまとめ、術眼を右左の有無から決め直す"""
+    # 2行目以降の手術・医師・麻酔は捨て、1行目を残す
+    merged_rows: dict[tuple[str, str], CsvRow] = {}
     for row in rows:
-        if key_counts[(row['手術日'], row['患者ID'])] > 1:
-            # 左眼のみの重複レコードを削除（右眼優先）
-            if row['右'] != '○' and row['左'] == '○':
-                continue
-            # 同一患者の同日手術は両眼手術として扱う
-            row['術眼'] = 'B'
-        deduplicated_rows.append(row)
-
-    return deduplicated_rows
+        first_row = merged_rows.setdefault((row['手術日'], row['患者ID']), row)
+        if first_row is not row:
+            first_row['右'] = first_row['右'] or row['右']
+            first_row['左'] = first_row['左'] or row['左']
+            first_row['術眼'] = _determine_eye_side(first_row)
+    return list(merged_rows.values())
 
 
 def _sort_rows(rows: list[CsvRow]) -> list[CsvRow]:

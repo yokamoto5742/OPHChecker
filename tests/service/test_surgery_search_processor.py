@@ -4,8 +4,14 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from service.surgery_search_processor import _convert_surgery_date_format, process_eye_surgery_data
-from utils.csv_table import read_csv_rows
+from service.surgery_search_processor import (
+    _convert_surgery_date_format,
+    _determine_eye_side,
+    _filter_exclusion_keywords,
+    _handle_duplicates,
+    process_eye_surgery_data,
+)
+from utils.csv_table import CsvRow, read_csv_rows
 
 
 @pytest.fixture
@@ -139,6 +145,60 @@ def test_convert_surgery_date_format_accepts_two_and_four_digit_year(surgery_dat
     rows = _convert_surgery_date_format([{'手術日': surgery_date}])
 
     assert rows[0]['手術日'] == '2026/09/15'
+
+
+def _same_day_row(right: str, left: str, surgery: str) -> CsvRow:
+    """同日・同一患者の行を作成"""
+    row = {'手術日': '2025/01/15', '患者ID': '12345', '右': right, '左': left, '手術': surgery}
+    row['術眼'] = _determine_eye_side(row)
+    return row
+
+
+@pytest.mark.parametrize(('eye_marks', 'expected_eye_side'), [
+    ([('○', ''), ('', '○')], 'B'),
+    ([('', '○'), ('○', '')], 'B'),
+    ([('', '○'), ('', '○')], 'L'),
+    ([('○', ''), ('○', '')], 'R'),
+])
+def test_handle_duplicates_merges_same_day_patient(eye_marks, expected_eye_side):
+    """同日・同一患者は1行にまとまり、術眼は右左の有無で決まる"""
+    rows = _handle_duplicates([
+        _same_day_row(right, left, f'手術{index}')
+        for index, (right, left) in enumerate(eye_marks, start=1)
+    ])
+
+    assert len(rows) == 1
+    assert rows[0]['術眼'] == expected_eye_side
+    # 手術・医師・麻酔は1行目を残す
+    assert rows[0]['手術'] == '手術1'
+
+
+def test_handle_duplicates_keeps_other_patients():
+    """同日でも患者が異なれば別の行として残る"""
+    other_patient_row = _same_day_row('', '○', '手術2')
+    other_patient_row['患者ID'] = '99999'
+
+    rows = _handle_duplicates([_same_day_row('○', '', '手術1'), other_patient_row])
+
+    assert [row['術眼'] for row in rows] == ['R', 'L']
+
+
+@pytest.mark.parametrize(('keyword', 'expected_names'), [
+    ('(仮', ['患者B']),
+    ('術式未定(仮)', ['患者B']),
+    ('.', ['患者A', '患者B']),
+])
+def test_filter_exclusion_keywords_matches_as_plain_text(keyword, expected_names):
+    """除外キーワードは正規表現ではなく部分一致で判定する"""
+    rows = [
+        {'氏名': '患者A', '手術': '術式未定(仮)'},
+        {'氏名': '患者B', '手術': '白内障手術'},
+    ]
+
+    with patch('service.surgery_search_processor.get_exclusion_line_keywords', return_value=[keyword]):
+        filtered_rows = _filter_exclusion_keywords(rows, MagicMock())
+
+    assert [row['氏名'] for row in filtered_rows] == expected_names
 
 
 def test_process_eye_surgery_data_anesthesia_replacement(temp_csv_file):
