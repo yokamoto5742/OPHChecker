@@ -64,6 +64,58 @@ def test_replacements_dialog_show_returns_result_on_save(root):
     assert 'inpatient_replacements' in dialog.result
 
 
+def test_replacements_dialog_add_replacement(root):
+    """置換を追加できる"""
+    dialog = ReplacementsDialog(root, {'球後麻酔': '局所'}, {}, {})
+
+    with patch.object(dialog, '_ask_values', return_value=['点眼麻酔', '局所']):
+        dialog._add_replacement(dialog.anesthesia_listbox, dialog.anesthesia_replacements)
+
+    assert dialog.anesthesia_replacements == {'球後麻酔': '局所', '点眼麻酔': '局所'}
+    assert dialog.anesthesia_listbox.get(tk.END) == '点眼麻酔 → 局所'
+
+
+def test_replacements_dialog_edit_replacement_keeps_position(root):
+    """キーを変更しても辞書とリストボックスの並び順が変わらない"""
+    dialog = ReplacementsDialog(root, {'球後麻酔': '局所', '全身麻酔': '全身'}, {}, {})
+    listbox = dialog.anesthesia_listbox
+    listbox.selection_set(0)
+
+    with patch.object(dialog, '_ask_values', return_value=['テノン嚢下', '局所']) as mock_ask_values:
+        dialog._edit_replacement(listbox, dialog.anesthesia_replacements)
+
+    # 現在のキーと値が初期値として渡される
+    assert mock_ask_values.call_args.args[2] == ['球後麻酔', '局所']
+    assert list(dialog.anesthesia_replacements.items()) == [('テノン嚢下', '局所'), ('全身麻酔', '全身')]
+    assert listbox.get(0, tk.END) == ('テノン嚢下 → 局所', '全身麻酔 → 全身')
+
+
+def test_replacements_dialog_rejects_duplicate_key(root):
+    """他の項目と置換前が重複する入力はエラーになる（自分自身の編集は除く）"""
+    dialog = ReplacementsDialog(root, {'球後麻酔': '局所', '全身麻酔': '全身'}, {}, {})
+
+    with patch.object(dialog, '_ask_values') as mock_ask_values:
+        dialog._ask_replacement('置換編集', '球後麻酔', '局所', dialog.anesthesia_replacements)
+
+    find_duplicate = mock_ask_values.call_args.args[3]
+    assert find_duplicate(['全身麻酔', '局所']) is not None
+    assert find_duplicate(['球後麻酔', '全身']) is None
+    assert find_duplicate(['点眼麻酔', '局所']) is None
+
+
+def test_replacements_dialog_delete_replacement_with_arrow_in_value(root):
+    """値に「 → 」を含む置換も削除できる"""
+    dialog = ReplacementsDialog(root, {'A': 'B → C'}, {}, {})
+    listbox = dialog.anesthesia_listbox
+    listbox.selection_set(0)
+
+    with patch('tkinter.messagebox.askyesno', return_value=True):
+        dialog._delete_replacement(listbox, dialog.anesthesia_replacements)
+
+    assert dialog.anesthesia_replacements == {}
+    assert listbox.size() == 0
+
+
 def test_replacements_dialog_delete_replacement(root):
     """置換を削除できる"""
     anesthesia = {'球後麻酔': '局所', '点眼麻酔': '局所'}

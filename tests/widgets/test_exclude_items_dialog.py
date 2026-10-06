@@ -1,8 +1,9 @@
 import tkinter as tk
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
+from widgets.base_dialog import find_input_error
 from widgets.exclude_items_dialog import ExcludeItemsDialog
 
 
@@ -61,31 +62,76 @@ def test_exclude_items_dialog_show_returns_result_on_save(root):
 
 def test_exclude_items_dialog_add_item(root):
     """アイテムを追加できる"""
-    keywords = []
-    strings = []
-
-    dialog = ExcludeItemsDialog(root, keywords, strings)
-
-    # リストボックスとアイテムリストを取得
+    dialog = ExcludeItemsDialog(root, [], [])
     listbox = dialog.keywords_listbox
     item_list = dialog.exclusion_line_keywords
 
-    # モックエントリを作成
-    with patch('tkinter.Toplevel') as mock_toplevel:
-        mock_dialog = MagicMock()
-        mock_toplevel.return_value = mock_dialog
+    with patch.object(dialog, '_ask_values', return_value=['新しいキーワード']):
+        dialog._add_item(listbox, item_list, 'キーワード')
 
-        with patch('tkinter.Entry') as mock_entry:
-            mock_entry_instance = MagicMock()
-            mock_entry_instance.get.return_value = '新しいキーワード'
-            mock_entry.return_value = mock_entry_instance
+    assert item_list == ['新しいキーワード']
+    assert listbox.get(0, tk.END) == ('新しいキーワード',)
 
-            # 手動でアイテムを追加
-            item_list.append('新しいキーワード')
-            listbox.insert(tk.END, '新しいキーワード')
 
-    assert '新しいキーワード' in item_list
-    assert listbox.size() == 1
+def test_exclude_items_dialog_add_item_cancelled(root):
+    """入力をキャンセルした場合は追加されない"""
+    dialog = ExcludeItemsDialog(root, ['キーワード1'], [])
+
+    with patch.object(dialog, '_ask_values', return_value=None):
+        dialog._add_item(dialog.keywords_listbox, dialog.exclusion_line_keywords, 'キーワード')
+
+    assert dialog.exclusion_line_keywords == ['キーワード1']
+    assert dialog.keywords_listbox.size() == 1
+
+
+def test_exclude_items_dialog_edit_item(root):
+    """選択したアイテムを同じ位置で編集できる"""
+    dialog = ExcludeItemsDialog(root, ['キーワード1', 'キーワード2'], [])
+    listbox = dialog.keywords_listbox
+    listbox.selection_set(0)
+
+    with patch.object(dialog, '_ask_values', return_value=['変更後']) as mock_ask_values:
+        dialog._edit_item(listbox, dialog.exclusion_line_keywords, 'キーワード')
+
+    # 現在の値が初期値として渡される
+    assert mock_ask_values.call_args.args[2] == ['キーワード1']
+    assert dialog.exclusion_line_keywords == ['変更後', 'キーワード2']
+    assert listbox.get(0, tk.END) == ('変更後', 'キーワード2')
+
+
+def _operate_input_dialog(dialog: ExcludeItemsDialog, text: str, button_index: int) -> None:
+    """_ask_valuesが開いた入力ダイアログに値を入れ、OK(0)またはキャンセル(1)を押す"""
+    input_dialog = [widget for widget in dialog.dialog.winfo_children() if isinstance(widget, tk.Toplevel)][-1]
+    try:
+        entry = [widget for widget in input_dialog.winfo_children() if isinstance(widget, tk.Entry)][0]
+        entry.delete(0, tk.END)
+        entry.insert(0, text)
+        button_frame = input_dialog.winfo_children()[-1]
+        button_frame.winfo_children()[button_index].invoke()
+    except Exception:
+        input_dialog.destroy()
+        raise
+
+
+def test_ask_values_returns_stripped_input(root):
+    """入力ダイアログでOKを押すと前後の空白を除いた値が返る"""
+    dialog = ExcludeItemsDialog(root, [], [])
+    root.after(50, lambda: _operate_input_dialog(dialog, ' (トーリック) ', 0))
+
+    assert dialog._ask_values('キーワード追加', ['キーワード:'], ['']) == ['(トーリック)']
+
+
+@pytest.mark.parametrize('invalid_text', ['', 'a,b', '10:30', '50%'])
+def test_ask_values_rejects_invalid_input(root, invalid_text):
+    """空欄や保存形式を壊す文字は警告して受け付けない"""
+    dialog = ExcludeItemsDialog(root, [], [])
+
+    with patch('tkinter.messagebox.showwarning') as mock_showwarning:
+        root.after(50, lambda: _operate_input_dialog(dialog, invalid_text, 0))
+        root.after(100, lambda: _operate_input_dialog(dialog, invalid_text, 1))
+
+        assert dialog._ask_values('キーワード追加', ['キーワード:'], ['']) is None
+        mock_showwarning.assert_called_once()
 
 
 def test_exclude_items_dialog_delete_item(root):
@@ -130,25 +176,15 @@ def test_exclude_items_dialog_delete_item_no_selection(root):
         mock_showwarning.assert_called_once()
 
 
-@pytest.mark.parametrize('value', ['a,b', '10:30', '50%'])
-def test_exclude_items_dialog_warns_forbidden_characters(root, value):
-    """保存形式を壊す文字を含む入力は警告して拒否する"""
-    dialog = ExcludeItemsDialog(root, [], [])
-
-    with patch('tkinter.messagebox.showwarning') as mock_showwarning:
-        assert dialog._warn_forbidden_characters(['キーワード', value], dialog.dialog) is True
-
-        mock_showwarning.assert_called_once()
+@pytest.mark.parametrize('value', ['a,b', '10:30', '50%', ''])
+def test_find_input_error_rejects_invalid_values(value):
+    """空欄や保存形式を壊す文字を含む入力はエラーになる"""
+    assert find_input_error(['キーワード', value]) is not None
 
 
-def test_exclude_items_dialog_accepts_normal_characters(root):
+def test_find_input_error_accepts_normal_characters():
     """括弧などの通常の文字は拒否しない"""
-    dialog = ExcludeItemsDialog(root, [], [])
-
-    with patch('tkinter.messagebox.showwarning') as mock_showwarning:
-        assert dialog._warn_forbidden_characters(['(トーリック)', '★'], dialog.dialog) is False
-
-        mock_showwarning.assert_not_called()
+    assert find_input_error(['(トーリック)', '★']) is None
 
 
 def test_exclude_items_dialog_has_two_tabs(root):

@@ -1,9 +1,19 @@
 import tkinter as tk
 from abc import ABC, abstractmethod
 from tkinter import messagebox
+from typing import Callable
 
 # txtの保存形式で区切り文字・補間記号として使われるため入力できない文字
 FORBIDDEN_CHARACTERS = ',:%'
+
+
+def find_input_error(values: list[str]) -> str | None:
+    """入力値に問題があれば警告メッセージを返す"""
+    if not all(values):
+        return "値を入力してください"
+    if any(character in value for value in values for character in FORBIDDEN_CHARACTERS):
+        return "「,」「:」「%」は使用できません"
+    return None
 
 
 class BaseDialog(ABC):
@@ -111,12 +121,62 @@ class BaseDialog(ABC):
         )
         delete_button.pack(side=tk.LEFT, padx=2)
 
-    def _warn_forbidden_characters(self, values: list[str], parent: tk.Toplevel) -> bool:
-        """入力値に使用できない文字が含まれていれば警告を表示してTrueを返す"""
-        if any(character in value for value in values for character in FORBIDDEN_CHARACTERS):
-            messagebox.showwarning("警告", "「,」「:」「%」は使用できません", parent=parent)
-            return True
-        return False
+    def _ask_values(
+        self,
+        title: str,
+        labels: list[str],
+        initial_values: list[str],
+        find_error: Callable[[list[str]], str | None] | None = None,
+    ) -> list[str] | None:
+        """ラベルごとの入力欄を持つダイアログを表示し、入力値を返す（キャンセル時はNone）"""
+        dialog = tk.Toplevel(self.dialog)
+        dialog.title(title)
+        dialog.transient(self.dialog)
+        dialog.grab_set()
+
+        entries: list[tk.Entry] = []
+        for label_text, initial_value in zip(labels, initial_values):
+            label = tk.Label(dialog, text=label_text, font=("Arial", self.font_size))
+            label.pack(padx=20, pady=(10 if entries else 20, 5))
+
+            entry = tk.Entry(dialog, font=("Arial", self.font_size), width=40)
+            entry.insert(0, initial_value)
+            entry.pack(padx=20, pady=5)
+            entries.append(entry)
+
+        entries[0].focus_set()
+        entries[0].select_range(0, tk.END)
+
+        confirmed_values: list[str] = []
+
+        def on_ok() -> None:
+            values = [entry.get().strip() for entry in entries]
+            error_message = find_input_error(values) or (find_error and find_error(values))
+            if error_message:
+                messagebox.showwarning("警告", error_message, parent=dialog)
+                return
+            confirmed_values.extend(values)
+            dialog.destroy()
+
+        entries[-1].bind("<Return>", lambda e: on_ok())
+        entries[-1].bind("<Escape>", lambda e: dialog.destroy())
+
+        button_frame = tk.Frame(dialog)
+        button_frame.pack(padx=20, pady=(5, 20))
+
+        ok_button = tk.Button(button_frame, text="OK", command=on_ok, font=("Arial", self.font_size), width=10)
+        ok_button.pack(side=tk.LEFT, padx=5)
+
+        cancel_button = tk.Button(
+            button_frame, text="キャンセル", command=dialog.destroy, font=("Arial", self.font_size), width=10
+        )
+        cancel_button.pack(side=tk.LEFT, padx=5)
+
+        dialog.geometry(f"450x{100 + 50 * len(labels)}")
+        self._center_window_on_parent(dialog, self.dialog)
+        dialog.wait_window()
+
+        return confirmed_values or None
 
     def _center_window(self) -> None:
         self.dialog.update_idletasks()

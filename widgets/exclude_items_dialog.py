@@ -67,46 +67,10 @@ class ExcludeItemsDialog(BaseDialog):
         )
 
     def _add_item(self, listbox: tk.Listbox, item_list: list[str], item_name: str) -> None:
-        dialog = tk.Toplevel(self.dialog)
-        dialog.title(f"{item_name}追加")
-        dialog.transient(self.dialog)
-        dialog.grab_set()
-
-        label = tk.Label(dialog, text=f"{item_name}を入力してください:", font=("Arial", self.font_size))
-        label.pack(padx=20, pady=(20, 5))
-
-        entry = tk.Entry(dialog, font=("Arial", self.font_size), width=40)
-        entry.pack(padx=20, pady=5)
-        entry.focus_set()
-
-        def on_ok() -> None:
-            value = entry.get().strip()
-            if self._warn_forbidden_characters([value], dialog):
-                return
-            if value:
-                item_list.append(value)
-                listbox.insert(tk.END, value)
-                dialog.destroy()
-            else:
-                messagebox.showwarning("警告", f"{item_name}を入力してください", parent=dialog)
-
-        def on_cancel() -> None:
-            dialog.destroy()
-
-        entry.bind("<Return>", lambda e: on_ok())
-        entry.bind("<Escape>", lambda e: on_cancel())
-
-        button_frame = tk.Frame(dialog)
-        button_frame.pack(padx=20, pady=(5, 20))
-
-        ok_button = tk.Button(button_frame, text="OK", command=on_ok, font=("Arial", self.font_size), width=10)
-        ok_button.pack(side=tk.LEFT, padx=5)
-
-        cancel_button = tk.Button(button_frame, text="キャンセル", command=on_cancel, font=("Arial", self.font_size), width=10)
-        cancel_button.pack(side=tk.LEFT, padx=5)
-
-        dialog.geometry("450x150")
-        self._center_window_on_parent(dialog, self.dialog)
+        values = self._ask_values(f"{item_name}追加", [f"{item_name}を入力してください:"], [''])
+        if values:
+            item_list.append(values[0])
+            listbox.insert(tk.END, values[0])
 
     def _edit_item(self, listbox: tk.Listbox, item_list: list[str], item_name: str) -> None:
         selection = listbox.curselection()
@@ -115,52 +79,12 @@ class ExcludeItemsDialog(BaseDialog):
             return
 
         index = selection[0]
-        current_value = item_list[index]
-
-        dialog = tk.Toplevel(self.dialog)
-        dialog.title(f"{item_name}編集")
-        dialog.transient(self.dialog)
-        dialog.grab_set()
-
-        label = tk.Label(dialog, text=f"{item_name}を編集してください:", font=("Arial", self.font_size))
-        label.pack(padx=20, pady=(20, 5))
-
-        entry = tk.Entry(dialog, font=("Arial", self.font_size), width=40)
-        entry.insert(0, current_value)
-        entry.pack(padx=20, pady=5)
-        entry.focus_set()
-        entry.select_range(0, tk.END)
-
-        def on_ok() -> None:
-            value = entry.get().strip()
-            if self._warn_forbidden_characters([value], dialog):
-                return
-            if value:
-                item_list[index] = value
-                listbox.delete(index)
-                listbox.insert(index, value)
-                listbox.selection_set(index)
-                dialog.destroy()
-            else:
-                messagebox.showwarning("警告", f"{item_name}を入力してください", parent=dialog)
-
-        def on_cancel() -> None:
-            dialog.destroy()
-
-        entry.bind("<Return>", lambda e: on_ok())
-        entry.bind("<Escape>", lambda e: on_cancel())
-
-        button_frame = tk.Frame(dialog)
-        button_frame.pack(padx=20, pady=(5, 20))
-
-        ok_button = tk.Button(button_frame, text="OK", command=on_ok, font=("Arial", self.font_size), width=10)
-        ok_button.pack(side=tk.LEFT, padx=5)
-
-        cancel_button = tk.Button(button_frame, text="キャンセル", command=on_cancel, font=("Arial", self.font_size), width=10)
-        cancel_button.pack(side=tk.LEFT, padx=5)
-
-        dialog.geometry("450x150")
-        self._center_window_on_parent(dialog, self.dialog)
+        values = self._ask_values(f"{item_name}編集", [f"{item_name}を編集してください:"], [item_list[index]])
+        if values:
+            item_list[index] = values[0]
+            listbox.delete(index)
+            listbox.insert(index, values[0])
+            listbox.selection_set(index)
 
     def _delete_item(self, listbox: tk.Listbox, item_list: list[str]) -> None:
         selection = listbox.curselection()
