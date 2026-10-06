@@ -12,45 +12,36 @@
 ## システム要件
 
 - **Python**: 3.12 以上
-- **OS**: Windows11
+- **OS**: Windows 11
+- **パッケージ管理**: uv
 
 ## セットアップ手順
 
 ### 1. リポジトリをクローン
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/yokamoto5742/OPHChecker
 cd OPHChecker
 ```
 
-### 2. 仮想環境を作成・有効化
+### 2. 依存パッケージをインストール
 
 ```bash
-# 仮想環境作成
-python -m venv .venv
-
-# 仮想環境有効化
-.venv\Scripts\activate
+uv sync
 ```
 
-### 3. 依存パッケージをインストール
-
-```bash
-pip install -r requirements.txt
-```
-
-### 4. 設定ファイルを確認
+### 3. 設定ファイルを確認
 
 `utils/config.ini` に手術データファイルのパスを設定します。実際の環境に合わせてパスを修正してください。
 
-### 5. インストール確認
+### 4. インストール確認
 
 ```bash
 # 型チェック実行
 pyright
 
 # テスト実行
-python -m pytest tests/ -v
+uv run pytest tests/ -v
 ```
 
 ## 使用方法
@@ -92,7 +83,7 @@ surgery_error_extractor('比較結果.csv', '出力ディレクトリ', 'テン�
 ### GUI で実行
 
 ```bash
-python main.py
+uv run python main.py
 ```
 
 GUI アプリケーションが起動し、各処理をダイアログ形式で実行できます。
@@ -124,45 +115,16 @@ OPHChecker/
 │   └── __init__.py
 │
 ├── widgets/                           # UI コンポーネント
+│   ├── base_dialog.py                # ダイアログ基底クラス
 │   ├── exclude_items_dialog.py       # 除外項目設定ダイアログ
 │   ├── replacements_dialog.py        # 置換設定ダイアログ
 │   └── __init__.py
 │
 ├── tests/                             # テストスイート
-│   ├── test_main.py                  # メインテスト
-│   ├── app/                          # UI テスト
-│   │   ├── test_main_window.py
-│   │   └── __init__.py
-│   ├── service/                      # サービス層テスト
-│   │   ├── test_surgery_schedule_processor.py
-│   │   ├── test_surgery_search_processor.py
-│   │   ├── test_surgery_comparator.py
-│   │   ├── test_surgery_error_extractor.py
-│   │   └── __init__.py
-│   ├── utils/                        # ユーティリティテスト
-│   │   ├── test_config_manager.py
-│   │   ├── test_file_cleaner.py
-│   │   ├── test_log_rotation.py
-│   │   └── __init__.py
-│   ├── widgets/                      # UI コンポーネントテスト
-│   │   ├── test_exclude_items_dialog.py
-│   │   ├── test_replacements_dialog.py
-│   │   └── __init__.py
-│   └── __init__.py
-│
-├── scripts/                           # ビルド・バージョン管理
-│   ├── version_manager.py            # バージョン・日付自動更新
-│   └── __init__.py
-│
-├── docs/                              # ドキュメント
-│   ├── README.md                     # 本ファイル
-│   ├── CHANGELOG.md                  # 変更履歴
-│   └── LICENSE
-│
 ├── main.py                            # アプリケーション エントリーポイント
 ├── build.py                           # PyInstaller ビルドスクリプト
-├── requirements.txt                   # Python 依存パッケージ
-├── pyrightconfig.json                 # 型チェック設定
+├── pyproject.toml                     # パッケージ設定・依存管理（uv）
+├── uv.lock                            # uv ロックファイル
 ├── CLAUDE.md                          # 開発ガイドライン
 └── .gitignore
 ```
@@ -299,13 +261,13 @@ log_retention_days = 7            # ログ保持日数
 
 ```ini
 input_path = C:\Shinseikai\OPHChecker\input
-surgery_search_data = C:\Shinseikai\OPHChecker\input\眼科システム手術検索.csv
-processed_surgery_search_data = C:\Shinseikai\OPHChecker\processed\processed_search.csv
-surgery_schedule = C:\Shinseikai\OPHChecker\input\手術予定表.xls
-processed_surgery_schedule = C:\Shinseikai\OPHChecker\processed\processed_schedule.csv
-comparison_result = C:\Shinseikai\OPHChecker\processed\comparison.csv
-template_path = C:\Shinseikai\OPHChecker\眼科手術指示確認.xlsx
 output_path = C:\Shinseikai\OPHChecker\output
+surgery_search_data = C:\Shinseikai\OPHChecker\input\眼科システム手術検索.csv
+processed_surgery_search_data = C:\Shinseikai\OPHChecker\processed\processed_surgery_search.csv
+surgery_schedule = C:\Shinseikai\OPHChecker\input\手術予定表.xls
+processed_surgery_schedule = C:\Shinseikai\OPHChecker\processed\processed_surgery_schedule.csv
+comparison_result = C:\Shinseikai\OPHChecker\processed\comparison_result.csv
+template_path = C:\Shinseikai\OPHChecker\眼科手術指示確認.xlsx
 excludeitems_file = C:\Shinseikai\OPHChecker\excludeitems.txt
 replacements_file = C:\Shinseikai\OPHChecker\replacements.txt
 ```
@@ -331,67 +293,51 @@ anesthesia_replacements = 球後麻酔:局所,点眼麻酔:局所
 
 ```bash
 # すべてのテストを実行
-python -m pytest tests/ -v
+.venv\Scripts\python.exe -m pytest tests/ -v --tb=short
 
 # カバレッジレポート付きで実行
-python -m pytest tests/ -v --cov
+.venv\Scripts\python.exe -m pytest tests/ -v --tb=short --cov=app --cov-report=html
 
 # 特定のテストファイルを実行
-python -m pytest tests/test_main.py -v
+.venv\Scripts\python.exe -m pytest tests/service/test_surgery_schedule_processor.py -v
 
-# 特定のモジュールのテストを実行
-python -m pytest tests/service/ -v
-python -m pytest tests/utils/ -v
+# 特定のテストを実行
+.venv\Scripts\python.exe -m pytest tests/service/test_surgery_schedule_processor.py::test_process_surgery_schedule_creates_output_file -v
 ```
 
 ### 型チェック
 
 ```bash
-# Pyright で型チェック (Python 3.12, standard mode)
+# Pyright で型チェック (Python 3.13, standard mode)
 pyright
 ```
 
-### ビルド・バージョン管理
+### ビルド
 
 ```bash
-# 実行ファイルをビルド (バージョン自動更新)
+# 実行ファイルをビルド
 python build.py
-
-# 手動でバージョンを更新
-python -c "from scripts.version_manager import update_version; update_version()"
 ```
 
-**ビルド処理の流れ**:
-1. `scripts/version_manager.py` が呼ばれてバージョンを自動インクリメント
-2. `app/__init__.py` の `__version__` と `__date__` を更新
-3. `README.md` のバージョン・日付も同期更新
-4. PyInstaller でスタンドアロン実行ファイルを生成 (`dist/眼科手術指示確認.exe`)
+PyInstaller でスタンドアロン実行ファイルを `dist/眼科手術指示確認.exe` に生成します。
 
 ## コード規約
 
 ### 型ヒント
 
-すべての関数パラメータと戻り値に型ヒント必須です。Pyright は `standard` モード、Python 3.12 で動作します。
+すべての関数パラメータと戻り値に型ヒント必須です。Pyright は `standard` モード、Python 3.13 で動作します。
 
 ```python
 def process_data(input_file: str, output_file: str) -> None:
-    df = pd.read_csv(input_file, encoding='cp932')
-    # ...
-    df.to_csv(output_file, encoding='cp932', index=False)
+    """手術データを処理する"""
+    # ファイル処理の実装
+    pass
 ```
 
 ### ファイルエンコーディング
 
 - Python ソースコード: UTF-8
 - 日本語データファイル (CSV, Excel): cp932 (Windows Shift-JIS)
-
-```python
-# CSV 読み込み (日本語対応)
-df = pd.read_csv('眼科システム手術検索.csv', encoding='cp932')
-
-# CSV 出力 (日本語対応)
-df.to_csv('output.csv', encoding='cp932', index=False)
-```
 
 ## トラブルシューティング
 
@@ -420,7 +366,7 @@ df.to_csv('output.csv', encoding='cp932', index=False)
 
 ```bash
 cd C:\Users\yokam\PycharmProjects\OPHChecker
-python -m pytest tests/ -v
+.venv\Scripts\python.exe -m pytest tests/ -v --tb=short
 ```
 
 ## 注意事項
