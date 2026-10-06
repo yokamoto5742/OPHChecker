@@ -20,7 +20,7 @@ python build.py                  # PyInstallerでexe作成 → dist/眼科手術
 
 ## アーキテクチャ
 
-Tkinter GUI（`app/main_window.py`）が `service/` の4処理をバックグラウンドスレッドで順に実行する。
+Tkinter GUI（`app/main_window.py`）が `service/` の4処理をメインスレッドで順に同期実行する（Tkはメインスレッド以外から操作できないため、スレッドは使わない）。
 
 1. `process_surgery_schedule`: 手術予定表Excel(.xls)をCSVに変換
 2. `process_eye_surgery_data`: 眼科システムのCSVを整形

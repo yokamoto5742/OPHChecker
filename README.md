@@ -121,8 +121,6 @@ OPHChecker/
 │   ├── config.ini                    # 設定ファイル
 │   ├── file_cleaner.py               # 古いファイル削除管理
 │   ├── log_rotation.py               # ログローテーション管理
-│   ├── excludeitems.txt              # 除外項目一覧 (テキスト形式)
-│   ├── replacements.txt              # 置換項目一覧 (テキスト形式)
 │   └── __init__.py
 │
 ├── widgets/                           # UI コンポーネント
@@ -251,9 +249,10 @@ surgery_error_extractor('comparison.csv', 'output/', 'template.xlsx')
 - `load_config()`: config.ini から設定を読み込む
 - `save_config()`: 設定を保存
 - `get_paths()`: ファイルパスを取得
-- `get_exclusion_line_keywords()`: 除外キーワード一覧を取得
-- `get_surgery_strings_to_remove()`: 削除対象術式文字列を取得
-- `get_replacement_dict()`: 置換辞書を取得
+- `get_exclude_items()` / `save_exclude_items()`: 除外設定（行除外キーワード・手術文字列削除リスト）をまとめて取得・保存
+- `get_replacements()` / `save_replacements()`: 置換設定（麻酔・医師・入外）をまとめて取得・保存
+
+除外設定と置換設定は `config.ini` ではなく、`[Paths]` の `excludeitems_file` / `replacements_file` が指す外部txtに保存されます。txtが無い場合は `config_manager.DEFAULT_CONFIG` の既定値が使われます。
 
 ### log_rotation.py
 
@@ -285,24 +284,6 @@ window_width = 600                # ウィンドウ幅
 window_height = 500               # ウィンドウ高さ
 ```
 
-### [DialogSize]
-
-ダイアログサイズの設定
-
-```ini
-folder_dialog_width = 600         # フォルダ選択ダイアログ幅
-folder_dialog_height = 200        # フォルダ選択ダイアログ高さ
-```
-
-### [ExcludeItems]
-
-除外キーワード・削除対象文字列の設定 (カンマ区切り)
-
-```ini
-exclusion_line_keywords = ★,霰粒腫,術式未定,先天性鼻涙管閉塞開放術
-surgery_strings_to_remove = (クラレオントーリック),(クラレオンパンオプティクス)
-```
-
 ### [LOGGING]
 
 ログ出力設定
@@ -310,7 +291,6 @@ surgery_strings_to_remove = (クラレオントーリック),(クラレオンパ
 ```ini
 log_directory = logs              # ログ出力ディレクトリ
 log_retention_days = 7            # ログ保持日数
-log_level = INFO                  # ログレベル
 ```
 
 ### [Paths]
@@ -326,11 +306,24 @@ processed_surgery_schedule = C:\Shinseikai\OPHChecker\processed\processed_schedu
 comparison_result = C:\Shinseikai\OPHChecker\processed\comparison.csv
 template_path = C:\Shinseikai\OPHChecker\眼科手術指示確認.xlsx
 output_path = C:\Shinseikai\OPHChecker\output
+excludeitems_file = C:\Shinseikai\OPHChecker\excludeitems.txt
+replacements_file = C:\Shinseikai\OPHChecker\replacements.txt
 ```
 
-### [Replacements]
+### 除外設定・置換設定 (外部txt)
 
-データ標準化用の置換辞書 (オリジナル値:統一値)
+`excludeitems_file` / `replacements_file` のtxtに保存されます。画面の「除外設定」「置換設定」から編集してください。値に `,` `:` `%` は使用できません。
+
+```ini
+# excludeitems.txt
+[ExcludeItems]
+exclusion_line_keywords = ★,霰粒腫,術式未定,先天性鼻涙管閉塞開放術
+surgery_strings_to_remove = (クラレオントーリック),(クラレオンパンオプティクス)
+
+# replacements.txt (置換前:置換後)
+[Replacements]
+anesthesia_replacements = 球後麻酔:局所,点眼麻酔:局所
+```
 
 ## 開発方法
 
