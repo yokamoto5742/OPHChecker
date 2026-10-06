@@ -183,6 +183,57 @@ def test_oph_checker_gui_start_analysis_validates_config(root, mock_config):
                 assert str(gui.start_button['state']) == 'normal'
 
 
+def test_oph_checker_gui_start_analysis_runs_all_steps_synchronously(root, mock_config):
+    """分析はメインスレッドで4処理を順に実行し、完了後にボタンが有効に戻る"""
+    called_steps: list[str] = []
+
+    def record_step(step_name: str, return_value: str | None = None):
+        return lambda *args: called_steps.append(step_name) or return_value
+
+    with (
+        patch('app.main_window.load_config', return_value=mock_config),
+        patch('app.main_window.process_surgery_schedule', side_effect=record_step('schedule')),
+        patch('app.main_window.process_eye_surgery_data', side_effect=record_step('search')),
+        patch('app.main_window.compare_surgery_data', side_effect=record_step('compare')),
+        patch('app.main_window.surgery_error_extractor', side_effect=record_step('extract', 'output.xlsx')),
+        patch('app.main_window.read_csv_rows', return_value=[{'手術日': '2025/01/15'}]),
+        patch('app.main_window.os.startfile') as mock_startfile,
+    ):
+        gui = OPHCheckerGUI(root)
+        with (
+            patch.object(gui, '_validate_config', return_value=True),
+            patch.object(gui, '_create_output_folders'),
+        ):
+            gui._start_analysis()
+
+        # スレッドを使わないので、戻った時点ですべて完了している
+        assert called_steps == ['schedule', 'search', 'compare', 'extract']
+        assert gui.status_var.get() == '処理完了'
+        assert str(gui.start_button['state']) == 'normal'
+        mock_startfile.assert_called_once()
+
+
+def test_oph_checker_gui_start_analysis_shows_error_when_step_fails(root, mock_config):
+    """処理が失敗したらエラーを表示し、後続の処理は実行しない"""
+    with (
+        patch('app.main_window.load_config', return_value=mock_config),
+        patch('app.main_window.process_surgery_schedule', side_effect=ValueError('読み込み失敗')),
+        patch('app.main_window.process_eye_surgery_data') as mock_search,
+        patch('tkinter.messagebox.showerror') as mock_error,
+    ):
+        gui = OPHCheckerGUI(root)
+        with (
+            patch.object(gui, '_validate_config', return_value=True),
+            patch.object(gui, '_create_output_folders'),
+        ):
+            gui._start_analysis()
+
+        mock_search.assert_not_called()
+        mock_error.assert_called_once()
+        assert '読み込み失敗' in gui.status_var.get()
+        assert str(gui.start_button['state']) == 'normal'
+
+
 def test_oph_checker_gui_close_application_while_running(root, mock_config):
     """実行中にアプリケーションを閉じると警告が表示される"""
     with patch('app.main_window.load_config') as mock_load_config:

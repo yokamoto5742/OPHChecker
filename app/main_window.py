@@ -1,6 +1,5 @@
 import logging
 import os
-import threading
 import tkinter as tk
 from pathlib import Path
 from tkinter import messagebox, scrolledtext
@@ -29,6 +28,7 @@ class OPHCheckerGUI:
     def __init__(self, root: tk.Tk) -> None:
         self.root = root
         self.root.title(f"眼科手術指示確認 v{__version__}")
+        self.root.protocol("WM_DELETE_WINDOW", self._close_application)
         self.config = load_config()
         self._apply_appearance_settings()
         self._setup_ui()
@@ -145,8 +145,8 @@ class OPHCheckerGUI:
         self.log_text.delete("1.0", tk.END)
         self.status_var.set("処理中...")
 
-        thread = threading.Thread(target=self._run_analysis, daemon=True)
-        thread.start()
+        # Tkはメインスレッド以外から操作できないため同期実行する（画面は_log_messageで更新）
+        self._run_analysis()
 
     def _validate_config(self) -> bool:
         paths = get_paths(self.config)
