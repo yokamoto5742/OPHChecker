@@ -1,22 +1,19 @@
 import logging
 
 from utils.csv_table import (
+    COMPARE_COLUMNS,
+    COMPARISON_RESULT_COLUMNS,
     DATE_OUTPUT_FORMAT,
+    MATCHED,
+    MISMATCHED,
+    NOT_ENTERED,
     CsvRow,
+    comparison_column,
     normalize_patient_id,
     parse_date,
     read_csv_rows,
     write_csv_rows,
 )
-
-COMPARE_COLUMNS = ['入外', '術眼', '手術', '医師', '麻酔']
-NOT_ENTERED = '未入力'
-OUTPUT_COLUMNS = [
-    '手術日', '患者ID', '氏名', '入外', '術眼',
-    '手術', '医師', '麻酔', '術前',
-    '入外_比較', '術眼_比較',
-    '手術_比較', '医師_比較', '麻酔_比較'
-]
 
 
 def _normalize_keys(rows: list[CsvRow]) -> None:
@@ -33,9 +30,11 @@ def _compare_row(search_row: CsvRow, schedule_row: CsvRow | None) -> CsvRow:
     for column in COMPARE_COLUMNS:
         schedule_value = schedule_row[column] if schedule_row else ''
         # 予定が未入力の場合は'未入力'、それ以外は一致判定（True/False）
-        output_row[f'{column}_比較'] = (
-            NOT_ENTERED if schedule_value == '' else str(search_row[column] == schedule_value)
-        )
+        if schedule_value == '':
+            result = NOT_ENTERED
+        else:
+            result = MATCHED if search_row[column] == schedule_value else MISMATCHED
+        output_row[comparison_column(column)] = result
 
     return output_row
 
@@ -84,14 +83,14 @@ def compare_surgery_data(
         matched_rows = schedule_by_key.get((search_row['手術日'], search_row['患者ID']), [None])
         output_rows.extend(_compare_row(search_row, schedule_row) for schedule_row in matched_rows)
 
-    write_csv_rows(comparison_result, OUTPUT_COLUMNS, output_rows)
+    write_csv_rows(comparison_result, COMPARISON_RESULT_COLUMNS, output_rows)
 
     logging.info("=== 比較結果の詳細 ===")
 
     for column in COMPARE_COLUMNS:
-        results = [row[f'{column}_比較'] for row in output_rows]
-        true_count = results.count(str(True))
-        false_count = results.count(str(False))
+        results = [row[comparison_column(column)] for row in output_rows]
+        true_count = results.count(MATCHED)
+        false_count = results.count(MISMATCHED)
         not_entered_count = results.count(NOT_ENTERED)
 
         logging.info(f"{column}: 一致={true_count}件, 不一致={false_count}件, 未入力={not_entered_count}件")

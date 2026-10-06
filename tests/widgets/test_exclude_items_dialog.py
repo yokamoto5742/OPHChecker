@@ -107,7 +107,8 @@ def _operate_input_dialog(dialog: ExcludeItemsDialog, text: str, button_index: i
         entry.delete(0, tk.END)
         entry.insert(0, text)
         button_frame = input_dialog.winfo_children()[-1]
-        button_frame.winfo_children()[button_index].invoke()
+        buttons = [widget for widget in button_frame.winfo_children() if isinstance(widget, tk.Button)]
+        buttons[button_index].invoke()
     except Exception:
         input_dialog.destroy()
         raise

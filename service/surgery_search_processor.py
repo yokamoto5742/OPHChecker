@@ -12,13 +12,12 @@ from utils.config_manager import (
 )
 from utils.csv_table import (
     DATE_OUTPUT_FORMAT,
+    SEARCH_COLUMNS,
     CsvRow,
     normalize_patient_id,
     read_csv_rows,
     write_csv_rows,
 )
-
-OUTPUT_COLUMNS = ['手術日', '患者ID', '氏名', '入外', '術眼', '手術', '医師', '麻酔', '術前']
 
 
 def _determine_eye_side(row: CsvRow) -> str:
@@ -143,7 +142,7 @@ def process_eye_surgery_data(input_file_path: str, output_file_path: str) -> Non
     rows = _handle_duplicates(rows)
     rows = _sort_rows(rows)
 
-    write_csv_rows(output_file_path, OUTPUT_COLUMNS, rows)
+    write_csv_rows(output_file_path, SEARCH_COLUMNS, rows)
     logging.info(f"手術検索データの処理が完了しました: {output_file_path}")
 
 if __name__ == '__main__':

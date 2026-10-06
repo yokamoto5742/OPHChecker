@@ -7,10 +7,9 @@ from typing import Any
 import xlrd
 from openpyxl import load_workbook
 
-from utils.csv_table import DATE_OUTPUT_FORMAT, CsvRow, parse_date, write_csv_rows
+from utils.csv_table import DATE_OUTPUT_FORMAT, SCHEDULE_COLUMNS, CsvRow, parse_date, write_csv_rows
 
 HEADER_ROW_INDEX = 1
-OUTPUT_COLUMNS = ['手術日', '患者ID', '氏名', '入外', '術眼', '手術', '医師', '麻酔']
 
 
 def _convert_xls_cell(cell: xlrd.sheet.Cell, book: xlrd.Book) -> Any:
@@ -102,7 +101,7 @@ def process_surgery_schedule(surgery_schedule: str, processed_surgery_schedule: 
 
     processed_rows.sort(key=_sort_key)
 
-    write_csv_rows(processed_surgery_schedule, OUTPUT_COLUMNS, processed_rows)
+    write_csv_rows(processed_surgery_schedule, SCHEDULE_COLUMNS, processed_rows)
 
     logging.info(f"手術予定表の処理が完了しました: {processed_surgery_schedule}")
 

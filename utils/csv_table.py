@@ -5,7 +5,25 @@ CSV_ENCODING = 'cp932'
 DATE_OUTPUT_FORMAT = '%Y/%m/%d'
 DATE_INPUT_FORMATS = ['%Y/%m/%d', '%Y-%m-%d', '%Y-%m-%d %H:%M:%S', '%y/%m/%d']
 
+SCHEDULE_COLUMNS = ['手術日', '患者ID', '氏名', '入外', '術眼', '手術', '医師', '麻酔']
+SEARCH_COLUMNS = SCHEDULE_COLUMNS + ['術前']
+COMPARE_COLUMNS = ['入外', '術眼', '手術', '医師', '麻酔']
+
+# 比較結果の判定値
+MATCHED = 'True'
+MISMATCHED = 'False'
+NOT_ENTERED = '未入力'
+
 type CsvRow = dict[str, str]
+
+
+def comparison_column(column: str) -> str:
+    """比較結果を格納する列名を返す"""
+    return f'{column}_比較'
+
+
+COMPARISON_COLUMNS = [comparison_column(column) for column in COMPARE_COLUMNS]
+COMPARISON_RESULT_COLUMNS = SEARCH_COLUMNS + COMPARISON_COLUMNS
 
 
 def read_csv_rows(file_path: str) -> list[CsvRow]:

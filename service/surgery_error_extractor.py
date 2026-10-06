@@ -4,11 +4,17 @@ from pathlib import Path
 
 from openpyxl import load_workbook
 
-from utils.csv_table import DATE_OUTPUT_FORMAT, read_csv_rows
+from utils.csv_table import (
+    COMPARISON_COLUMNS,
+    COMPARISON_RESULT_COLUMNS,
+    DATE_OUTPUT_FORMAT,
+    MATCHED,
+    MISMATCHED,
+    NOT_ENTERED,
+    read_csv_rows,
+)
 
-COMPARISON_COLUMNS = ['入外_比較', '術眼_比較', '手術_比較', '医師_比較', '麻酔_比較']
-OUTPUT_COLUMNS = ['手術日', '患者ID', '氏名', '入外', '術眼', '手術', '医師', '麻酔', '術前'] + COMPARISON_COLUMNS
-RESULT_LABELS = {'True': '一致', 'False': '不一致'}
+RESULT_LABELS = {MATCHED: '一致', MISMATCHED: '不一致'}
 
 
 def _to_cell_value(column: str, text: str) -> datetime | int | str | None:
@@ -40,7 +46,7 @@ def surgery_error_extractor(comparison_result: str, output_path: str, template_p
     """
     error_rows = [
         row for row in read_csv_rows(comparison_result)
-        if any(row[column] in ('False', '未入力') for column in COMPARISON_COLUMNS)
+        if any(row[column] in (MISMATCHED, NOT_ENTERED) for column in COMPARISON_COLUMNS)
     ]
 
     if len(error_rows) == 0:
@@ -58,7 +64,7 @@ def surgery_error_extractor(comparison_result: str, output_path: str, template_p
 
     if ws is not None:
         for row_idx, row in enumerate(error_rows, start=2):
-            for col_idx, column in enumerate(OUTPUT_COLUMNS, start=1):
+            for col_idx, column in enumerate(COMPARISON_RESULT_COLUMNS, start=1):
                 ws.cell(row=row_idx, column=col_idx, value=_to_cell_value(column, row[column]))
 
     wb.save(output_filepath)
