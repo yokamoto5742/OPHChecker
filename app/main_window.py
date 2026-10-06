@@ -1,3 +1,4 @@
+import configparser
 import logging
 import os
 import tkinter as tk
@@ -20,6 +21,7 @@ from utils.config_manager import (
     save_replacements,
 )
 from utils.csv_table import read_csv_rows
+from widgets.base_dialog import BaseDialog
 from widgets.exclude_items_dialog import ExcludeItemsDialog
 from widgets.replacements_dialog import ReplacementsDialog
 
@@ -52,66 +54,13 @@ class OPHCheckerGUI:
         button_frame_row2 = tk.Frame(self.root)
         button_frame_row2.grid(row=2, column=0, columnspan=2, pady=(5, 10), sticky="w", padx=10)
 
-        self.start_button = tk.Button(
-            button_frame_row1,
-            text="分析開始",
-            command=self._start_analysis,
-            font=("Arial", self.font_size),
-            bg="lightgreen",
-            fg="black",
-            padx=20,
-            pady=10,
-            width=15,
+        self.start_button = self._create_button(
+            button_frame_row1, "分析開始", self._start_analysis, bg="lightgreen"
         )
-        self.start_button.pack(side=tk.LEFT, padx=5)
-
-        self.exclude_items_button = tk.Button(
-            button_frame_row1,
-            text="除外設定",
-            command=self._open_exclude_items,
-            font=("Arial", self.font_size),
-            fg="black",
-            padx=20,
-            pady=10,
-            width=15,
-        )
-        self.exclude_items_button.pack(side=tk.LEFT, padx=5)
-
-        self.replacements_button = tk.Button(
-            button_frame_row1,
-            text="置換設定",
-            command=self._open_replacements,
-            font=("Arial", self.font_size),
-            fg="black",
-            padx=20,
-            pady=10,
-            width=15,
-        )
-        self.replacements_button.pack(side=tk.LEFT, padx=5)
-
-        self.copy_input_path_button = tk.Button(
-            button_frame_row2,
-            text="入力パスコピー",
-            command=self._copy_input_path_to_clipboard,
-            font=("Arial", self.font_size),
-            fg="black",
-            padx=20,
-            pady=10,
-            width=15,
-        )
-        self.copy_input_path_button.pack(side=tk.LEFT, padx=5)
-
-        self.close_button = tk.Button(
-            button_frame_row2,
-            text="閉じる",
-            command=self._close_application,
-            font=("Arial", self.font_size),
-            fg="black",
-            padx=20,
-            pady=10,
-            width=15,
-        )
-        self.close_button.pack(side=tk.LEFT, padx=5)
+        self._create_button(button_frame_row1, "除外設定", self._open_exclude_items)
+        self._create_button(button_frame_row1, "置換設定", self._open_replacements)
+        self._create_button(button_frame_row2, "入力パスコピー", self._copy_input_path_to_clipboard)
+        self._create_button(button_frame_row2, "閉じる", self._close_application)
 
         log_label = tk.Label(self.root, text="実行ログ:", font=("Arial", self.font_size - 1))
         log_label.grid(row=3, column=0, columnspan=2, sticky="nw", padx=10, pady=(5, 0))
@@ -120,7 +69,6 @@ class OPHCheckerGUI:
             self.root, height=15, width=70, font=("Courier", self.log_font_size)
         )
         self.log_text.grid(row=4, column=0, columnspan=2, padx=10, pady=10, sticky="nsew")
-        self.root.grid_rowconfigure(4, weight=1)
 
         self.status_var = tk.StringVar(value="準備完了")
         status_bar = tk.Label(
@@ -131,6 +79,23 @@ class OPHCheckerGUI:
             font=("Arial", self.font_size - 2),
         )
         status_bar.grid(row=5, column=0, columnspan=2, sticky="ew", padx=5, pady=5)
+
+    def _create_button(
+        self, parent: tk.Frame, text: str, command: Callable[[], None], bg: str = "SystemButtonFace"
+    ) -> tk.Button:
+        button = tk.Button(
+            parent,
+            text=text,
+            command=command,
+            font=("Arial", self.font_size),
+            bg=bg,
+            fg="black",
+            padx=20,
+            pady=10,
+            width=15,
+        )
+        button.pack(side=tk.LEFT, padx=5)
+        return button
 
     def _log_message(self, message: str) -> None:
         self.log_text.insert(tk.END, message + "\n")
@@ -178,79 +143,26 @@ class OPHCheckerGUI:
         for path_key in ["processed_surgery_schedule", "processed_surgery_search_data", "comparison_result"]:
             Path(paths[path_key]).parent.mkdir(parents=True, exist_ok=True)
 
-    def _execute_step(
-        self,
-        step_num: int,
-        total_steps: int,
-        step_name: str,
-        func: Callable,
-        *args: Any,
-        **kwargs: Any
-    ) -> Any:
+    def _execute_step(self, step_num: int, total_steps: int, step_name: str, run_step: Callable[[], None]) -> None:
         """処理ステップを実行"""
         self._log_message(f"\n[{step_num}/{total_steps}] {step_name}を開始...")
         logging.info(f"[{step_num}/{total_steps}] {step_name}を開始")
 
-        try:
-            result = func(*args, **kwargs)
-            self._log_message(f"✓ {step_name}が完了しました")
-            logging.info(f"{step_name}が完了しました")
-            return result
-        except Exception as e:
-            self._log_message(f"✗ エラー: {str(e)}")
-            logging.error(f"{step_name}中にエラーが発生: {str(e)}", exc_info=True)
-            raise
+        run_step()
+        self._log_message(f"✓ {step_name}が完了しました")
+        logging.info(f"{step_name}が完了しました")
 
-    def _process_surgery_schedule(self, paths: dict) -> None:
-        """手術予定表の処理"""
-        self._execute_step(
-            1, 4, "手術予定表の処理",
-            process_surgery_schedule,
-            paths['surgery_schedule'],
-            paths['processed_surgery_schedule']
-        )
-
-    def _process_surgery_search(self, paths: dict) -> None:
-        """眼科手術検索データの処理"""
-        self._execute_step(
-            2, 4, "手術検索データの処理",
-            process_eye_surgery_data,
-            paths['surgery_search_data'],
-            paths['processed_surgery_search_data']
-        )
-
-    def _compare_surgery_data(self, paths: dict) -> None:
-        """データ比較"""
-        self._execute_step(
-            3, 4, "データ比較",
-            compare_surgery_data,
-            paths['processed_surgery_search_data'],
-            paths['processed_surgery_schedule'],
-            paths['comparison_result']
-        )
-
-    def _extract_surgery_errors(self, paths: dict) -> str:
+    def _extract_surgery_errors(self, paths: dict) -> None:
         """眼科手術指示確認ファイルを作成"""
-        self._log_message("\n[4/4] 眼科手術指示確認ファイルを作成開始...")
-        logging.info("[4/4] 眼科手術指示確認ファイルを作成開始")
-
-        try:
-            instruction_file = surgery_error_extractor(
-                paths['comparison_result'],
-                paths['output_path'],
-                paths['template_path']
-            )
-            if instruction_file:
-                self._log_message("✓ 眼科手術指示確認ファイルを作成しました")
-                logging.info("眼科手術指示確認ファイルを作成しました")
-            else:
-                self._log_message("✓ 不一致および未入力データはありませんでした")
-                logging.info("不一致および未入力データはありませんでした")
-            return instruction_file
-        except Exception as e:
-            self._log_message(f"✗ エラー: {str(e)}")
-            logging.error(f"眼科手術指示確認ファイルの作成中にエラーが発生: {str(e)}", exc_info=True)
-            raise
+        instruction_file = surgery_error_extractor(
+            paths['comparison_result'],
+            paths['output_path'],
+            paths['template_path']
+        )
+        if instruction_file:
+            self._log_message("眼科手術指示確認ファイルを作成しました")
+        else:
+            self._log_message("不一致および未入力データはありませんでした")
 
     def _log_completion_summary(self, processed_surgery_search_data: str) -> None:
         """完了サマリーをログに記録"""
@@ -266,12 +178,12 @@ class OPHCheckerGUI:
 
     def _handle_analysis_error(self, e: Exception) -> None:
         """分析エラーをハンドリング"""
-        logging.error(f"分析処理中に予期しないエラーが発生: {str(e)}", exc_info=True)
+        logging.error(f"分析処理中にエラーが発生: {e}", exc_info=True)
         self._log_message("\n" + "=" * 60)
-        self._log_message(f"✗ エラーが発生しました: {str(e)}")
+        self._log_message(f"✗ エラーが発生しました: {e}")
         self._log_message("=" * 60)
-        self.status_var.set(f"エラー: {str(e)}")
-        messagebox.showerror("エラー", f"処理中にエラーが発生しました:\n\n{str(e)}")
+        self.status_var.set(f"エラー: {e}")
+        messagebox.showerror("エラー", f"処理中にエラーが発生しました:\n\n{e}")
 
     def _run_analysis(self) -> None:
         try:
@@ -283,10 +195,22 @@ class OPHCheckerGUI:
             paths = get_paths(self.config)
             self._create_output_folders(paths)
 
-            self._process_surgery_schedule(paths)
-            self._process_surgery_search(paths)
-            self._compare_surgery_data(paths)
-            self._extract_surgery_errors(paths)
+            steps: list[tuple[str, Callable[[], None]]] = [
+                ("手術予定表の処理", lambda: process_surgery_schedule(
+                    paths['surgery_schedule'], paths['processed_surgery_schedule']
+                )),
+                ("手術検索データの処理", lambda: process_eye_surgery_data(
+                    paths['surgery_search_data'], paths['processed_surgery_search_data']
+                )),
+                ("データ比較", lambda: compare_surgery_data(
+                    paths['processed_surgery_search_data'],
+                    paths['processed_surgery_schedule'],
+                    paths['comparison_result']
+                )),
+                ("不一致・未入力の抽出", lambda: self._extract_surgery_errors(paths)),
+            ]
+            for step_num, (step_name, run_step) in enumerate(steps, start=1):
+                self._execute_step(step_num, len(steps), step_name, run_step)
 
             self._log_completion_summary(paths['processed_surgery_search_data'])
             self._open_output_folder(paths["output_path"])
@@ -302,60 +226,44 @@ class OPHCheckerGUI:
             os.startfile(output_path)
             logging.info(f"出力フォルダを開きました: {output_path}")
         except Exception as e:
-            logging.error(f"出力フォルダを開けません: {str(e)}", exc_info=True)
-            self._log_message(f"✗ エラー: 出力フォルダを開けません: {str(e)}")
+            logging.error(f"出力フォルダを開けません: {e}", exc_info=True)
+            self._log_message(f"✗ エラー: 出力フォルダを開けません: {e}")
             messagebox.showerror(
                 "エラー",
-                f"出力フォルダを開けません:\n\n{str(e)}",
+                f"出力フォルダを開けません:\n\n{e}",
+            )
+
+    def _edit_settings(
+        self,
+        settings_name: str,
+        load_settings: Callable[[configparser.ConfigParser], dict[str, Any]],
+        dialog_class: Callable[..., BaseDialog],
+        save_settings: Callable[[configparser.ConfigParser, dict[str, Any]], None],
+    ) -> None:
+        """設定をダイアログで編集し、保存が押されたらtxtに書き込む"""
+        try:
+            # 設定のキー名はダイアログの引数名と一致している
+            dialog = dialog_class(self.root, font_size=self.font_size, **load_settings(self.config))
+            result = dialog.show()
+
+            if result:
+                save_settings(self.config, result)
+
+                logging.info(f"{settings_name}を保存しました")
+                self._log_message(f"✓ {settings_name}を保存しました")
+                messagebox.showinfo("保存完了", f"{settings_name}を保存しました", parent=self.root)
+        except Exception as e:
+            logging.error(f"{settings_name}の編集中にエラーが発生: {e}", exc_info=True)
+            self._log_message(f"✗ エラー: {settings_name}の編集中にエラーが発生しました: {e}")
+            messagebox.showerror(
+                "エラー", f"{settings_name}の編集中にエラーが発生しました:\n\n{e}", parent=self.root
             )
 
     def _open_exclude_items(self) -> None:
-        try:
-            exclude_items = get_exclude_items(self.config)
-
-            dialog = ExcludeItemsDialog(
-                self.root,
-                exclude_items['exclusion_line_keywords'],
-                exclude_items['surgery_strings_to_remove'],
-                self.font_size,
-            )
-            result = dialog.show()
-
-            if result:
-                save_exclude_items(self.config, result)
-
-                logging.info("除外項目を保存しました")
-                self._log_message("✓ 除外項目を保存しました")
-                messagebox.showinfo("保存完了", "除外項目を保存しました", parent=self.root)
-        except Exception as e:
-            logging.error(f"除外項目の編集中にエラーが発生: {str(e)}", exc_info=True)
-            self._log_message(f"✗ エラー: 除外項目の編集中にエラーが発生しました: {str(e)}")
-            messagebox.showerror("エラー", f"除外項目の編集中にエラーが発生しました:\n\n{str(e)}", parent=self.root)
-
+        self._edit_settings("除外項目", get_exclude_items, ExcludeItemsDialog, save_exclude_items)
 
     def _open_replacements(self) -> None:
-        try:
-            replacements = get_replacements(self.config)
-
-            dialog = ReplacementsDialog(
-                self.root,
-                replacements['anesthesia_replacements'],
-                replacements['surgeon_replacements'],
-                replacements['inpatient_replacements'],
-                self.font_size,
-            )
-            result = dialog.show()
-
-            if result:
-                save_replacements(self.config, result)
-
-                logging.info("置換設定を保存しました")
-                self._log_message("✓ 置換設定を保存しました")
-                messagebox.showinfo("保存完了", "置換設定を保存しました", parent=self.root)
-        except Exception as e:
-            logging.error(f"置換設定の編集中にエラーが発生: {str(e)}", exc_info=True)
-            self._log_message(f"✗ エラー: 置換設定の編集中にエラーが発生しました: {str(e)}")
-            messagebox.showerror("エラー", f"置換設定の編集中にエラーが発生しました:\n\n{str(e)}", parent=self.root)
+        self._edit_settings("置換設定", get_replacements, ReplacementsDialog, save_replacements)
 
     def _copy_input_path_to_clipboard(self) -> None:
         paths = get_paths(self.config)
@@ -375,9 +283,9 @@ class OPHCheckerGUI:
             logging.info(f"入力パスをクリップボードにコピーしました: {input_path}")
             self._show_auto_close_message("コピー完了", f"入力パスをクリップボードにコピーしました:\n\n{input_path}")
         except Exception as e:
-            logging.error(f"クリップボードへのコピーに失敗: {str(e)}", exc_info=True)
-            self._log_message(f"✗ エラー: クリップボードへのコピーに失敗しました: {str(e)}")
-            messagebox.showerror("エラー", f"クリップボードへのコピーに失敗しました:\n\n{str(e)}")
+            logging.error(f"クリップボードへのコピーに失敗: {e}", exc_info=True)
+            self._log_message(f"✗ エラー: クリップボードへのコピーに失敗しました: {e}")
+            messagebox.showerror("エラー", f"クリップボードへのコピーに失敗しました:\n\n{e}")
 
     def _show_auto_close_message(self, title: str, message: str, duration_ms: int = 1000) -> None:
         dialog = tk.Toplevel(self.root)
