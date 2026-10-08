@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from utils.file_cleaner import cleanup_old_files
+from utils.file_cleaner import cleanup_old_files, delete_unexpected_input_files
 
 
 @pytest.fixture
@@ -114,3 +114,50 @@ def test_cleanup_old_files_ignores_subdirectories(temp_config, temp_output_direc
     cleanup_old_files(temp_config)
 
     assert subdir.exists()
+
+
+KEEP_FILE_NAMES = ['眼科システム手術検索.csv', '手術予定表.xls']
+
+
+def _keep_file_paths(input_directory: str) -> list[str]:
+    return [str(Path(input_directory) / file_name) for file_name in KEEP_FILE_NAMES]
+
+
+def test_delete_unexpected_input_files_keeps_only_input_files(temp_output_directory):
+    """保持対象以外のファイルだけが削除される"""
+    for file_name in KEEP_FILE_NAMES + ['手術予定表 (1).xls', 'メモ.txt']:
+        (Path(temp_output_directory) / file_name).write_text('content', encoding='utf-8')
+
+    deleted_file_names = delete_unexpected_input_files(
+        temp_output_directory, _keep_file_paths(temp_output_directory)
+    )
+
+    assert sorted(deleted_file_names) == sorted(['手術予定表 (1).xls', 'メモ.txt'])
+    assert sorted(path.name for path in Path(temp_output_directory).iterdir()) == sorted(KEEP_FILE_NAMES)
+
+
+def test_delete_unexpected_input_files_ignores_extension_case(temp_output_directory):
+    """拡張子の大文字小文字が違っても保持対象は削除されない"""
+    upper_case_file = Path(temp_output_directory) / '手術予定表.XLS'
+    upper_case_file.write_text('content', encoding='utf-8')
+
+    deleted_file_names = delete_unexpected_input_files(
+        temp_output_directory, _keep_file_paths(temp_output_directory)
+    )
+
+    assert deleted_file_names == []
+    assert upper_case_file.exists()
+
+
+def test_delete_unexpected_input_files_ignores_subdirectories(temp_output_directory):
+    """サブディレクトリは削除対象外"""
+    subdir = Path(temp_output_directory) / 'subdir'
+    subdir.mkdir()
+
+    assert delete_unexpected_input_files(temp_output_directory, _keep_file_paths(temp_output_directory)) == []
+    assert subdir.exists()
+
+
+def test_delete_unexpected_input_files_nonexistent_directory():
+    """存在しないディレクトリの場合、エラーが発生しない"""
+    assert delete_unexpected_input_files('C:\\nonexistent\\directory', []) == []

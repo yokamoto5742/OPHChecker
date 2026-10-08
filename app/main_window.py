@@ -21,6 +21,7 @@ from utils.config_manager import (
     save_replacements,
 )
 from utils.csv_table import read_csv_rows
+from utils.file_cleaner import delete_unexpected_input_files
 from widgets.base_dialog import BaseDialog
 from widgets.exclude_items_dialog import ExcludeItemsDialog
 from widgets.replacements_dialog import ReplacementsDialog
@@ -143,6 +144,14 @@ class OPHCheckerGUI:
         for path_key in ["processed_surgery_schedule", "processed_surgery_search_data", "comparison_result"]:
             Path(paths[path_key]).parent.mkdir(parents=True, exist_ok=True)
 
+    def _delete_unexpected_input_files(self, paths: dict) -> None:
+        """入力フォルダから手術検索データ・手術予定表以外のファイルを削除"""
+        deleted_file_names = delete_unexpected_input_files(
+            paths["input_path"], [paths["surgery_search_data"], paths["surgery_schedule"]]
+        )
+        for file_name in deleted_file_names:
+            self._log_message(f"入力フォルダの不要なファイルを削除しました: {file_name}")
+
     def _execute_step(self, step_num: int, total_steps: int, step_name: str, run_step: Callable[[], None]) -> None:
         """処理ステップを実行"""
         self._log_message(f"\n[{step_num}/{total_steps}] {step_name}を開始...")
@@ -194,6 +203,7 @@ class OPHCheckerGUI:
 
             paths = get_paths(self.config)
             self._create_output_folders(paths)
+            self._delete_unexpected_input_files(paths)
 
             steps: list[tuple[str, Callable[[], None]]] = [
                 ("手術予定表の処理", lambda: process_surgery_schedule(
